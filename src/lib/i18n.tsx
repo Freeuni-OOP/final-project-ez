@@ -20,6 +20,10 @@ const strings = {
   examples: "Example patterns",
   tracks: "tracks",
   rest_hint: "Use - for a rest.",
+  mixer: "Mixer",
+  mute: "Mute",
+  visualizer: "Visualizer",
+  errors: "Pattern errors",
 
   how_title: "How it works",
   how_body:
