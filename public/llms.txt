@@ -1,0 +1,11 @@
+# AlgoRythm
+
+> Browser-based text-to-music composer. Write simple text patterns and hear them play with drums and synth engines.
+
+AlgoRythm turns plain text into music. Each line is a track; tokens on the line play on consecutive ticks of a shared grid. Drum tokens trigger samples; pitched tokens (like C4, E4) play through synth voices.
+
+## Pages
+
+- [Composer](/): Live text editor with playback, BPM control, and per-track mixer.
+- [Syntax Guide](/syntax): Reference for the AlgoRythm pattern language — tracks, tokens, rests, and pitches.
+- [Instrument Library](/library): Every supported instrument command with descriptions and example patterns.
