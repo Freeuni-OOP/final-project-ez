@@ -1,6 +1,0 @@
-# Generated files — collapsed in PR diffs and excluded from language stats.
-bun.lock                 linguist-generated=true
-src/routeTree.gen.ts     linguist-generated=true
-
-# Vendored shadcn/Radix UI primitives — not hand-authored project code.
-src/components/ui/**     linguist-vendored=true
