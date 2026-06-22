@@ -6,7 +6,7 @@ patterns and hear them play through drum and synth engines.
 > FreeUni OOP final project. The assignment specification is in
 > [`34QuizWebsite.pdf`](./34QuizWebsite.pdf).
 
-This repository is built up **incrementally** — each feature lands as its own
+This repository is built up **incrementally** each feature lands as its own
 reviewed Pull Request. This commit is the **scaffold seed**: a minimal, runnable
 base (tooling + app shell + UI primitives). Features (i18n, theming, the app
 header, the landing hero, the audio engine, the sound visualizer, the library
