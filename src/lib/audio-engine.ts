@@ -337,6 +337,7 @@ export class AudioEngine {
 
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  private analyser: AnalyserNode | null = null;
   private trackGains: GainNode[] = [];
 
   private timer: number | null = null;
@@ -378,6 +379,11 @@ export class AudioEngine {
 
   isPlaying(): boolean {
     return this.playing;
+  }
+
+  /** Analyser for the sound visualizer. Null until play() runs. */
+  getAnalyser(): AnalyserNode | null {
+    return this.analyser;
   }
 
   getBpm(): number {
@@ -434,7 +440,14 @@ export class AudioEngine {
 
     this.master = this.ctx.createGain();
     this.master.gain.value = this.masterVolume;
-    this.master.connect(this.ctx.destination);
+
+    // analyser sits between the master and the speakers so the visualizer can
+    // read the live audio (master -> analyser -> destination).
+    this.analyser = this.ctx.createAnalyser();
+    this.analyser.fftSize = 2048;
+    this.analyser.smoothingTimeConstant = 0.8;
+    this.master.connect(this.analyser);
+    this.analyser.connect(this.ctx.destination);
 
     // one gain node per track = the per-track mixer
     this.trackGains = this.tracks.map((t) => {
@@ -461,6 +474,7 @@ export class AudioEngine {
       void this.ctx.close();
       this.ctx = null;
       this.master = null;
+      this.analyser = null;
       this.trackGains = [];
     }
   }
