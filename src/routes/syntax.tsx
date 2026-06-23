@@ -66,7 +66,7 @@ synth: C4 E4 G4 C5`}</Example>
           tempo is set by the BPM control on the composer.
         </p>
         <Example>{`drum:  kick  -     snare -
-hat:   hat   hat   hat   hat
+drum:   hat   hat   hat   hat
         ^step1 ^step2 ^step3 ^step4`}</Example>
 
         {/* Rests */}
