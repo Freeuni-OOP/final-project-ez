@@ -12,3 +12,9 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+
+  backend:
+    build: ./backend
+    container_name: algorythm-backend
+    ports:
+      - "8080:8080"
