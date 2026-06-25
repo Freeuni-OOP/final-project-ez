@@ -38,6 +38,151 @@ const EXAMPLES: { name: string; pattern: string }[] = [
 
 type Mix = { volume: number; muted: boolean };
 
+/**
+ * Full-viewport animated landing: flowing lines on a canvas, a glow that follows
+ * the cursor, and a display title where "code" is pixel-styled and "music" is
+ * script-styled. A cue scrolls down to the composer below.
+ */
+function Hero() {
+  const { t } = useI18n();
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const glowRef = useRef<HTMLDivElement | null>(null);
+  const colorRef = useRef<HTMLSpanElement | null>(null);
+
+  // Flowing-lines background.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+
+    let raf = 0;
+    let time = 0;
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
+      canvas.height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const themeColor = () =>
+      (colorRef.current && getComputedStyle(colorRef.current).color) || "#c084fc";
+
+    const LINES = 6;
+    const draw = () => {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      const color = themeColor();
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+
+      for (let l = 0; l < LINES; l++) {
+        const amp = 26 + l * 16;
+        const yBase = h * 0.5 + (l - LINES / 2) * 44;
+        ctx.globalAlpha = 0.08 + l * 0.025;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 6) {
+          const y =
+            yBase +
+            Math.sin(x * 0.008 + time + l) * amp +
+            Math.sin(x * 0.003 - time * 0.7) * amp * 0.4;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      time += 0.01;
+      raf = requestAnimationFrame(draw);
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  const onMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = glowRef.current;
+    if (!el) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    el.style.transform = `translate(${e.clientX - rect.left - 200}px, ${e.clientY - rect.top - 200}px)`;
+  };
+
+  const scrollToComposer = () => {
+    document.getElementById("composer")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  return (
+    <section
+      onMouseMove={onMouseMove}
+      className="relative h-screen w-full overflow-hidden bg-background"
+    >
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+
+      {/* glow that follows the cursor */}
+      <div
+        ref={glowRef}
+        className="pointer-events-none absolute left-0 top-0 h-[400px] w-[400px] rounded-full bg-primary/25 blur-[120px]"
+      />
+
+      {/* hidden helper to read the theme color for the canvas */}
+      <span ref={colorRef} className="hidden text-primary" aria-hidden />
+
+      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
+        <h1 className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          <span className="hero-code text-5xl text-foreground sm:text-7xl">code</span>
+          <span className="text-2xl font-light text-muted-foreground sm:text-4xl">
+            becomes
+          </span>
+          <span className="hero-music text-6xl text-primary sm:text-8xl">music</span>
+        </h1>
+
+        <p className="mt-8 max-w-xl text-sm text-muted-foreground sm:text-base">
+          {t("tagline")}
+        </p>
+
+        <button
+          onClick={scrollToComposer}
+          className="group mt-12 flex flex-col items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {t("scroll_cue")}
+          <span className="animate-bounce text-lg">↓</span>
+        </button>
+      </div>
+
+      <style>{`
+        .hero-code {
+          font-family: 'Press Start 2P', monospace;
+          animation: heroGlitch 5s infinite;
+        }
+        .hero-music {
+          font-family: 'Pacifico', cursive;
+          display: inline-block;
+          animation: heroWave 4s ease-in-out infinite;
+        }
+        @keyframes heroGlitch {
+          0%, 88%, 100% { transform: translate(0, 0); text-shadow: none; opacity: 1; }
+          90% { transform: translate(-2px, 1px); text-shadow: 2px 0 var(--primary), -2px 0 #44d; opacity: .85; }
+          92% { transform: translate(2px, -1px); text-shadow: -2px 0 var(--primary), 2px 0 #44d; }
+          94% { transform: translate(-1px, 0); text-shadow: none; opacity: 1; }
+        }
+        @keyframes heroWave {
+          0%, 100% { transform: translateY(0) rotate(-2deg); }
+          50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-code, .hero-music { animation: none; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 function Composer() {
   const { t } = useI18n();
 
@@ -104,21 +249,14 @@ function Composer() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent" />
-        <div className="relative mx-auto max-w-5xl px-6 py-16 text-center">
-          <h1 className="whitespace-pre-line text-4xl font-bold tracking-tight sm:text-6xl">
-            {t("brand")}
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            {t("tagline")}
-          </p>
-        </div>
-      </section>
+    <main className="bg-background text-foreground">
+      <Hero />
 
-      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-10 lg:grid-cols-2">
+      {/* Composer */}
+      <div
+        id="composer"
+        className="mx-auto grid max-w-6xl gap-6 px-6 py-12 lg:grid-cols-2"
+      >
         {/* Editor + controls */}
         <div className="flex flex-col gap-4">
           <div className="rounded-xl border border-border bg-foreground/5 p-4">
