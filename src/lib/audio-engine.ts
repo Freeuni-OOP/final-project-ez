@@ -137,6 +137,72 @@ class Clap extends Instrument {
   }
 }
 
+class OpenHat extends Instrument {
+  constructor() {
+    super("ohat");
+  }
+  play(ctx: AudioContext, out: AudioNode, when: number, _f: number, dur: number) {
+    const len = Math.max(dur, 0.25);
+    const size = Math.floor(ctx.sampleRate * len);
+    const buf = ctx.createBuffer(1, size, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < size; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    const hp = ctx.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 6000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.25, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when + len);
+    noise.connect(hp).connect(g).connect(out);
+    noise.start(when);
+    noise.stop(when + len);
+  }
+}
+
+class Tom extends Instrument {
+  // pitch sets how low/high the tom sounds.
+  constructor(
+    name: string,
+    private pitch: number,
+  ) {
+    super(name);
+  }
+  play(ctx: AudioContext, out: AudioNode, when: number, _f: number, dur: number) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(this.pitch * 1.4, when);
+    osc.frequency.exponentialRampToValueAtTime(this.pitch * 0.6, when + dur);
+    g.gain.setValueAtTime(0.7, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    osc.connect(g).connect(out);
+    osc.start(when);
+    osc.stop(when + dur + 0.02);
+  }
+}
+
+class Cowbell extends Instrument {
+  constructor() {
+    super("cowbell");
+  }
+  play(ctx: AudioContext, out: AudioNode, when: number, _f: number, dur: number) {
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.3, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    g.connect(out);
+    [560, 845].forEach((f) => {
+      const osc = ctx.createOscillator();
+      osc.type = "square";
+      osc.frequency.value = f;
+      osc.connect(g);
+      osc.start(when);
+      osc.stop(when + dur);
+    });
+  }
+}
+
 /** Pitched oscillator voice. The waveform makes synth/saw/square/sine. */
 class Synth extends Instrument {
   constructor(
@@ -191,12 +257,109 @@ class Bass extends Instrument {
   }
 }
 
+/** Warm, slow-attack chord voice. */
+class Pad extends Instrument {
+  constructor() {
+    super("pad");
+  }
+  play(ctx: AudioContext, out: AudioNode, when: number, freq: number, dur: number) {
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, when);
+    g.gain.linearRampToValueAtTime(0.18, when + 0.25);
+    g.gain.setValueAtTime(0.18, when + Math.max(0.25, dur - 0.3));
+    g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    g.connect(out);
+    // three slightly detuned saws for a wide, warm sound
+    [1, 1.005, 0.995].forEach((d) => {
+      const o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.value = freq * d;
+      o.connect(g);
+      o.start(when);
+      o.stop(when + dur + 0.05);
+    });
+  }
+}
+
+/** Short, bright plucked tone. */
+class Pluck extends Instrument {
+  constructor() {
+    super("pluck");
+  }
+  play(ctx: AudioContext, out: AudioNode, when: number, freq: number, dur: number) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    osc.type = "triangle";
+    osc.frequency.value = freq;
+    lp.frequency.setValueAtTime(4000, when);
+    lp.frequency.exponentialRampToValueAtTime(500, when + dur);
+    g.gain.setValueAtTime(0.35, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    osc.connect(lp).connect(g).connect(out);
+    osc.start(when);
+    osc.stop(when + dur + 0.02);
+  }
+}
+
+/** Bell-like chime built from inharmonic partials. */
+class Chime extends Instrument {
+  constructor() {
+    super("chime");
+  }
+  play(ctx: AudioContext, out: AudioNode, when: number, freq: number, dur: number) {
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.3, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    g.connect(out);
+    [1, 2.76, 5.4].forEach((p, i) => {
+      const o = ctx.createOscillator();
+      const og = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq * p;
+      og.gain.value = 1 / (i + 1);
+      o.connect(og).connect(g);
+      o.start(when);
+      o.stop(when + dur + 0.05);
+    });
+  }
+}
+
+/** Bright, resonant lead. */
+class Lead extends Instrument {
+  constructor() {
+    super("lead");
+  }
+  play(ctx: AudioContext, out: AudioNode, when: number, freq: number, dur: number) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 3500;
+    lp.Q.value = 6;
+    osc.type = "sawtooth";
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0, when);
+    g.gain.linearRampToValueAtTime(0.28, when + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+    osc.connect(lp).connect(g).connect(out);
+    osc.start(when);
+    osc.stop(when + dur + 0.02);
+  }
+}
+
 /** Drum tokens used inside a "drum:" line. */
 const DRUMS: Record<string, Instrument> = {
   kick: new Kick(),
   snare: new Snare(),
   hat: new HiHat(),
+  ohat: new OpenHat(),
   clap: new Clap(),
+  tom: new Tom("tom", 120),
+  tomhi: new Tom("tomhi", 180),
+  tomlo: new Tom("tomlo", 80),
+  cowbell: new Cowbell(),
 };
 
 /** Line kinds that take pitched tokens like C4 / F#5. */
@@ -206,6 +369,10 @@ const PITCHED: Record<string, Instrument> = {
   square: new Synth("square", "square"),
   sine: new Synth("sine", "sine"),
   bass: new Bass(),
+  pad: new Pad(),
+  pluck: new Pluck(),
+  chime: new Chime(),
+  lead: new Lead(),
 };
 
 /** Names a "drum:" line can use, for the UI / library page. */
