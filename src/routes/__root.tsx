@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportError } from "../lib/error-reporting";
 import { AppHeader } from "../components/app-header";
-
+import { BackendStatus } from "@/components/backend-status";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -114,6 +114,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AppHeader />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <BackendStatus />
       <Outlet />
     </QueryClientProvider>
   );
