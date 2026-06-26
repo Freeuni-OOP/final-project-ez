@@ -8,7 +8,7 @@
 // Every line shares one step grid (token 1 = step 1, etc). "-" is a rest.
 //
 // OOP shape: an abstract Instrument with drum/synth subclasses, a Parser that
-// builds Tracks of Notes, a per-track Mixer for volume/mute, and a Sequencer
+// builds Tracks of Notes, a per-track Mixer for volume/mute/solo, and a Sequencer
 // (wrapped by AudioEngine) that schedules the steps in time.
 
 // --- Instruments --------------------------------------------------
@@ -422,6 +422,7 @@ export interface Track {
   raw: string;
   volume: number; // 0..1
   muted: boolean;
+  solo: boolean;
 }
 
 /** Result of parsing the whole text. */
@@ -474,7 +475,15 @@ export class Parser {
       }
     });
 
-    return { kind, notes, steps: tokens.length, raw: line, volume: 0.8, muted: false };
+    return {
+      kind,
+      notes,
+      steps: tokens.length,
+      raw: line,
+      volume: 0.8,
+      muted: false,
+      solo: false,
+    };
   }
 }
 
@@ -486,6 +495,7 @@ export interface TrackMixerState {
   kind: string;
   volume: number;
   muted: boolean;
+  solo: boolean;
 }
 
 /**
@@ -495,7 +505,8 @@ export interface TrackMixerState {
  *   engine.load("drum: kick hat snare hat\nsynth: C4 E4 G4 C5");
  *   engine.play();
  *   engine.setBpm(140);
- *   engine.setTrackMuted(0, true);
+ *   engine.setMasterVolume(0.7);
+ *   engine.setTrackSolo(0, true);
  *   engine.stop();
  */
 export class AudioEngine {
@@ -531,6 +542,7 @@ export class AudioEngine {
       if (prev && prev.kind === t.kind) {
         t.volume = prev.volume;
         t.muted = prev.muted;
+        t.solo = prev.solo;
       }
     });
     this.tracks = tracks;
@@ -569,7 +581,18 @@ export class AudioEngine {
       kind: t.kind,
       volume: t.volume,
       muted: t.muted,
+      solo: t.solo,
     }));
+  }
+
+  getMasterVolume(): number {
+    return this.masterVolume;
+  }
+
+  /** Set the master volume for the whole mix. Live while playing. */
+  setMasterVolume(volume: number): void {
+    this.masterVolume = Math.max(0, Math.min(1, volume));
+    if (this.master) this.master.gain.value = this.masterVolume;
   }
 
   setTrackVolume(index: number, volume: number): void {
@@ -586,12 +609,28 @@ export class AudioEngine {
     this.applyMixer();
   }
 
-  /** Push the current volume/mute values onto the live gain nodes. */
+  setTrackSolo(index: number, solo: boolean): void {
+    const t = this.tracks[index];
+    if (!t) return;
+    t.solo = solo;
+    this.applyMixer();
+  }
+
+  /** A track is audible if it isn't muted and either nothing is soloed or it
+   *  is one of the soloed tracks. Returns the gain to apply. */
+  private effectiveGain(track: Track, anySolo: boolean): number {
+    if (track.muted) return 0;
+    if (anySolo && !track.solo) return 0;
+    return track.volume;
+  }
+
+  /** Push the current volume/mute/solo values onto the live gain nodes. */
   private applyMixer(): void {
     if (!this.ctx) return;
+    const anySolo = this.tracks.some((t) => t.solo);
     this.tracks.forEach((t, i) => {
       const g = this.trackGains[i];
-      if (g) g.gain.value = t.muted ? 0 : t.volume;
+      if (g) g.gain.value = this.effectiveGain(t, anySolo);
     });
   }
 
@@ -617,9 +656,10 @@ export class AudioEngine {
     this.analyser.connect(this.ctx.destination);
 
     // one gain node per track = the per-track mixer
+    const anySolo = this.tracks.some((t) => t.solo);
     this.trackGains = this.tracks.map((t) => {
       const g = this.ctx!.createGain();
-      g.gain.value = t.muted ? 0 : t.volume;
+      g.gain.value = this.effectiveGain(t, anySolo);
       g.connect(this.master!);
       return g;
     });

@@ -36,7 +36,7 @@ const EXAMPLES: { name: string; pattern: string }[] = [
   },
 ];
 
-type Mix = { volume: number; muted: boolean };
+type Mix = { volume: number; muted: boolean; solo: boolean };
 
 /**
  * Full-viewport animated landing: flowing lines on a canvas, a glow that follows
@@ -190,6 +190,7 @@ function Composer() {
   const [bpm, setBpm] = useState(120);
   const [playing, setPlaying] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [master, setMaster] = useState(0.85);
   const [mix, setMix] = useState<Mix[]>([]);
 
   const engineRef = useRef<AudioEngine | null>(null);
@@ -206,7 +207,9 @@ function Composer() {
   // Keep one mixer row per track; reuse settings when the track count changes.
   useEffect(() => {
     setMix((prev) =>
-      parsed.tracks.map((tr, i) => prev[i] ?? { volume: tr.volume, muted: tr.muted }),
+      parsed.tracks.map(
+        (tr, i) => prev[i] ?? { volume: tr.volume, muted: tr.muted, solo: tr.solo },
+      ),
     );
   }, [parsed.tracks.length]);
 
@@ -217,9 +220,11 @@ function Composer() {
     const engine = getEngine();
     engine.load(source);
     engine.setBpm(bpm);
+    engine.setMasterVolume(master);
     mix.forEach((m, i) => {
       engine.setTrackVolume(i, m.volume);
       engine.setTrackMuted(i, m.muted);
+      engine.setTrackSolo(i, m.solo);
     });
     engine.play();
     setPlaying(true);
@@ -233,8 +238,14 @@ function Composer() {
   };
 
   const changeBpm = (value: number) => {
-    setBpm(value);
-    engineRef.current?.setBpm(value);
+    const v = Math.max(40, Math.min(220, Math.round(value || 0)));
+    setBpm(v);
+    engineRef.current?.setBpm(v);
+  };
+
+  const changeMaster = (value: number) => {
+    setMaster(value);
+    engineRef.current?.setMasterVolume(value);
   };
 
   const changeVolume = (i: number, value: number) => {
@@ -248,6 +259,14 @@ function Composer() {
     engineRef.current?.setTrackMuted(i, muted);
   };
 
+  const toggleSolo = (i: number) => {
+    const solo = !(mix[i]?.solo ?? false);
+    setMix((prev) => prev.map((m, idx) => (idx === i ? { ...m, solo } : m)));
+    engineRef.current?.setTrackSolo(i, solo);
+  };
+
+  const anySolo = mix.some((m) => m.solo);
+
   return (
     <main className="bg-background text-foreground">
       <Hero />
@@ -260,7 +279,7 @@ function Composer() {
         {/* Editor + controls */}
         <div className="flex flex-col gap-4">
           <div className="rounded-xl border border-border bg-foreground/5 p-4">
-            <div className="mb-3 flex flex-wrap items-center gap-3">
+            <div className="mb-3 flex flex-wrap items-center gap-4">
               <button
                 onClick={playing ? stop : play}
                 className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
@@ -268,17 +287,50 @@ function Composer() {
                 {playing ? t("stop") : t("play")}
               </button>
 
+              {/* BPM stepper: minus / number / plus */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>{t("bpm")}</span>
+                <div className="flex items-center overflow-hidden rounded-md border border-border">
+                  <button
+                    onClick={() => changeBpm(bpm - 1)}
+                    aria-label="Decrease BPM"
+                    className="px-2 py-1 text-foreground transition-colors hover:bg-accent"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min={40}
+                    max={220}
+                    value={bpm}
+                    onChange={(e) => changeBpm(Number(e.target.value))}
+                    className="w-14 border-x border-border bg-background py-1 text-center tabular-nums text-foreground outline-none"
+                  />
+                  <button
+                    onClick={() => changeBpm(bpm + 1)}
+                    aria-label="Increase BPM"
+                    className="px-2 py-1 text-foreground transition-colors hover:bg-accent"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Master volume */}
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                {t("bpm")}
+                {t("master")}
                 <input
                   type="range"
-                  min={40}
-                  max={220}
-                  value={bpm}
-                  onChange={(e) => changeBpm(Number(e.target.value))}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={master}
+                  onChange={(e) => changeMaster(Number(e.target.value))}
                   className="accent-primary"
                 />
-                <span className="w-10 tabular-nums text-foreground">{bpm}</span>
+                <span className="w-9 tabular-nums text-foreground">
+                  {Math.round(master * 100)}
+                </span>
               </label>
             </div>
 
@@ -336,7 +388,13 @@ function Composer() {
             ) : (
               <div className="space-y-2 overflow-x-auto">
                 {parsed.tracks.map((track, ti) => (
-                  <div key={ti} className="flex items-center gap-2">
+                  <div
+                    key={ti}
+                    className={cn(
+                      "flex items-center gap-2 transition-opacity",
+                      anySolo && !mix[ti]?.solo && "opacity-40",
+                    )}
+                  >
                     <span className="w-14 shrink-0 truncate text-xs text-muted-foreground">
                       {track.kind}
                     </span>
@@ -378,7 +436,13 @@ function Composer() {
             ) : (
               <div className="space-y-2">
                 {parsed.tracks.map((track, i) => (
-                  <div key={i} className="flex items-center gap-3">
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex items-center gap-3 transition-opacity",
+                      anySolo && !mix[i]?.solo && "opacity-40",
+                    )}
+                  >
                     <span className="w-14 shrink-0 truncate text-xs text-muted-foreground">
                       {track.kind}
                     </span>
@@ -391,6 +455,17 @@ function Composer() {
                       onChange={(e) => changeVolume(i, Number(e.target.value))}
                       className="flex-1 accent-primary"
                     />
+                    <button
+                      onClick={() => toggleSolo(i)}
+                      className={cn(
+                        "rounded-md border px-2 py-1 text-xs transition-colors",
+                        mix[i]?.solo
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {t("solo")}
+                    </button>
                     <button
                       onClick={() => toggleMute(i)}
                       className={cn(

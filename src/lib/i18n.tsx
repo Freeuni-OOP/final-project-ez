@@ -23,6 +23,8 @@ const strings = {
   rest_hint: "Use - for a rest.",
   mixer: "Mixer",
   mute: "Mute",
+  solo: "Solo",
+  master: "Master",
   visualizer: "Visualizer",
   errors: "Pattern errors",
 
