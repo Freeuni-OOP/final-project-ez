@@ -21,19 +21,61 @@ export const Route = createFileRoute("/")({
   component: Composer,
 });
 
-// A few ready-made patterns the user can load with one click.
-const EXAMPLES: { name: string; pattern: string }[] = [
+// Ready-made patterns the user can load with one click. Each carries its own
+// tempo so loading it also sets the BPM. They span styles + the full instrument
+// set so a new user immediately hears what the app can do.
+const EXAMPLES: { name: string; bpm: number; pattern: string }[] = [
   {
     name: "Four on the floor",
-    pattern: "drum: kick kick kick kick\ndrum: - hat - hat\nsynth: C4 - E4 -",
+    bpm: 128,
+    pattern: [
+      "drum: kick - kick - kick - kick -",
+      "drum: - hat - hat - hat - hat",
+      "drum: - - - - clap - - -",
+      "bass: C2 - C2 - G1 - G1 -",
+    ].join("\n"),
   },
   {
-    name: "Backbeat",
-    pattern: "drum: kick - snare -\ndrum: hat hat hat hat\nbass: C2 - G2 -",
+    name: "Slow pad piece",
+    bpm: 70,
+    pattern: [
+      "pad: C3 - - - F3 - - -",
+      "pad: E3 - - - A3 - - -",
+      "chime: - - G5 - - - C6 -",
+      "drum: kick - - - - - - -",
+    ].join("\n"),
   },
   {
-    name: "Arp",
-    pattern: "synth: C4 E4 G4 C5\nsaw: C3 - G3 -\ndrum: kick - kick -",
+    name: "Melodic walk",
+    bpm: 110,
+    pattern: [
+      "pluck: C4 E4 G4 B4 C5 B4 G4 E4",
+      "bass: C2 - - - G2 - - -",
+      "drum: - hat - hat - hat - hat",
+    ].join("\n"),
+  },
+  {
+    name: "Fast breakbeat",
+    bpm: 160,
+    pattern: [
+      "drum: kick - - kick - - kick -",
+      "drum: - - snare - - snare - snare",
+      "drum: hat hat ohat hat hat hat ohat hat",
+      "drum: - - - - - - tomlo tomhi",
+    ].join("\n"),
+  },
+  {
+    name: "Full arrangement",
+    bpm: 124,
+    pattern: [
+      "drum: kick - - - kick - - -",
+      "drum: - - - - snare - - -",
+      "drum: hat hat hat hat hat hat hat hat",
+      "drum: - - cowbell - - - cowbell -",
+      "bass: C2 - E2 - G2 - E2 -",
+      "lead: C5 - E5 G5 - B5 C6 -",
+      "pad: C3 - - - - - - -",
+    ].join("\n"),
   },
 ];
 
@@ -188,7 +230,7 @@ function Composer() {
   const { t } = useI18n();
 
   const [source, setSource] = useState(EXAMPLES[0].pattern);
-  const [bpm, setBpm] = useState(120);
+  const [bpm, setBpm] = useState(EXAMPLES[0].bpm);
   const [playing, setPlaying] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [master, setMaster] = useState(0.85);
@@ -247,6 +289,12 @@ function Composer() {
   const changeMaster = (value: number) => {
     setMaster(value);
     engineRef.current?.setMasterVolume(value);
+  };
+
+  // Load an example: set both its pattern and its tempo.
+  const loadExample = (ex: (typeof EXAMPLES)[number]) => {
+    setSource(ex.pattern);
+    changeBpm(ex.bpm);
   };
 
   const changeVolume = (i: number, value: number) => {
@@ -364,10 +412,15 @@ function Composer() {
               {EXAMPLES.map((ex) => (
                 <SpotlightCard
                   key={ex.name}
-                  onClick={() => setSource(ex.pattern)}
+                  onClick={() => loadExample(ex)}
                   className="p-3"
                 >
-                  <p className="text-sm font-medium text-foreground">{ex.name}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium text-foreground">{ex.name}</p>
+                    <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] tabular-nums text-muted-foreground">
+                      {ex.bpm} {t("bpm")}
+                    </span>
+                  </div>
                   <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
                     {ex.pattern.split("\n")[0]}
                   </p>
