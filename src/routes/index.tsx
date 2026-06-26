@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AudioEngine, Parser } from "@/lib/audio-engine";
 import { SoundVisualizer } from "@/components/sound-visualizer";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -358,16 +359,19 @@ function Composer() {
 
           {/* Examples */}
           <div className="rounded-xl border border-border bg-foreground/5 p-4">
-            <p className="mb-2 text-sm font-medium">{t("examples")}</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="mb-3 text-sm font-medium">{t("examples")}</p>
+            <div className="grid gap-3 sm:grid-cols-3">
               {EXAMPLES.map((ex) => (
-                <button
+                <SpotlightCard
                   key={ex.name}
                   onClick={() => setSource(ex.pattern)}
-                  className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+                  className="p-3"
                 >
-                  {ex.name}
-                </button>
+                  <p className="text-sm font-medium text-foreground">{ex.name}</p>
+                  <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground">
+                    {ex.pattern.split("\n")[0]}
+                  </p>
+                </SpotlightCard>
               ))}
             </div>
           </div>

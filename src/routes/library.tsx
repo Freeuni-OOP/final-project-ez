@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { AudioEngine } from "@/lib/audio-engine";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/library")({
@@ -194,16 +195,13 @@ function Library() {
   const renderCards = (entries: Entry[]) => (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {entries.map((e) => (
-        <div
-          key={e.id}
-          className="flex flex-col rounded-xl border border-border bg-foreground/5 p-4 transition-colors hover:border-primary/60"
-        >
+        <SpotlightCard key={e.id} className="flex h-full flex-col p-4">
           <h3 className="text-base font-semibold text-foreground">{e.name}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{e.desc}</p>
           <code className="mt-3 block rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground">
             {e.example}
           </code>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-4 flex gap-2">
             <button
               onClick={() => copy(e.id, e.example)}
               className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -217,7 +215,7 @@ function Library() {
               {t("preview")}
             </button>
           </div>
-        </div>
+        </SpotlightCard>
       ))}
     </div>
   );
