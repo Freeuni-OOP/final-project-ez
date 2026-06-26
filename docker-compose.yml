@@ -1,9 +1,7 @@
 # One command to run the whole project locally:
 #   docker compose up --build
 #
-# This compose file currently brings up the frontend. As the backend lands
-# (Spring Boot + PostgreSQL), new services are added here so the same single
-# command spins up the full stack.
+# Brings up the frontend, the backend, and the PostgreSQL database together.
 services:
   frontend:
     build: .
@@ -16,5 +14,32 @@ services:
   backend:
     build: ./backend
     container_name: algorythm-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/algorythm
+      SPRING_DATASOURCE_USERNAME: algorythm
+      SPRING_DATASOURCE_PASSWORD: algorythm
     ports:
       - "8080:8080"
+
+  db:
+    image: postgres:16
+    container_name: algorythm-db
+    environment:
+      POSTGRES_DB: algorythm
+      POSTGRES_USER: algorythm
+      POSTGRES_PASSWORD: algorythm
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U algorythm -d algorythm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
