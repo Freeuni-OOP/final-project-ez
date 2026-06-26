@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { AudioEngine } from "@/lib/audio-engine";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/library")({
@@ -56,6 +57,41 @@ const PERCUSSION: Entry[] = [
     example: "drum: - clap - clap",
     preview: "drum: clap - - - - - - -",
   },
+  {
+    id: "ohat",
+    name: "Open hi-hat",
+    desc: "Open hi-hat with a longer, sizzling decay.",
+    example: "drum: hat ohat hat ohat",
+    preview: "drum: ohat - - - - - - -",
+  },
+  {
+    id: "tom",
+    name: "Tom (mid)",
+    desc: "Mid tom with a short pitch drop.",
+    example: "drum: tom - tom -",
+    preview: "drum: tom - - - - - - -",
+  },
+  {
+    id: "tomhi",
+    name: "Tom (high)",
+    desc: "Higher, snappier tom for fills.",
+    example: "drum: tomhi tomhi - -",
+    preview: "drum: tomhi - - - - - - -",
+  },
+  {
+    id: "tomlo",
+    name: "Tom (low)",
+    desc: "Deep low tom for weighty fills.",
+    example: "drum: tomlo - - tomlo",
+    preview: "drum: tomlo - - - - - - -",
+  },
+  {
+    id: "cowbell",
+    name: "Cowbell",
+    desc: "Metallic cowbell accent that cuts through.",
+    example: "drum: - cowbell - cowbell",
+    preview: "drum: cowbell - - - - - - -",
+  },
 ];
 
 // Pitched: the kind is the instrument, the tokens are notes like C4.
@@ -95,6 +131,34 @@ const PITCHED: Entry[] = [
     example: "bass: C2 - G2 -",
     preview: "bass: C2 - - - - - - -",
   },
+  {
+    id: "pad",
+    name: "Pad",
+    desc: "Warm, slow-attack pad for sustained chords.",
+    example: "pad: C4 - - -",
+    preview: "pad: C4 - - - - - - -",
+  },
+  {
+    id: "pluck",
+    name: "Pluck",
+    desc: "Short plucked tone, bright then quick to fade.",
+    example: "pluck: C4 E4 G4 C5",
+    preview: "pluck: C4 - - - - - - -",
+  },
+  {
+    id: "chime",
+    name: "Chime",
+    desc: "Bell-like chime with shimmering partials.",
+    example: "chime: C5 G5 C6 -",
+    preview: "chime: C5 - - - - - - -",
+  },
+  {
+    id: "lead",
+    name: "Lead",
+    desc: "Bright, resonant lead that sits on top of a mix.",
+    example: "lead: C4 E4 G4 B4",
+    preview: "lead: C4 - - - - - - -",
+  },
 ];
 
 function Library() {
@@ -131,16 +195,13 @@ function Library() {
   const renderCards = (entries: Entry[]) => (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {entries.map((e) => (
-        <div
-          key={e.id}
-          className="flex flex-col rounded-xl border border-border bg-foreground/5 p-4 transition-colors hover:border-primary/60"
-        >
+        <SpotlightCard key={e.id} className="flex h-full flex-col p-4">
           <h3 className="text-base font-semibold text-foreground">{e.name}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{e.desc}</p>
           <code className="mt-3 block rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground">
             {e.example}
           </code>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-4 flex gap-2">
             <button
               onClick={() => copy(e.id, e.example)}
               className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -154,7 +215,7 @@ function Library() {
               {t("preview")}
             </button>
           </div>
-        </div>
+        </SpotlightCard>
       ))}
     </div>
   );

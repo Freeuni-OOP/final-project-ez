@@ -85,7 +85,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "AlgoRythm is a browser-based tool where code becomes music. Write simple text patterns and hear them play.",
       },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
+      // Display fonts for the hero: a blocky pixel font and a flowing script.
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pacifico&display=swap",
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
