@@ -37,6 +37,15 @@ const strings = {
   email: "Email",
   password: "Password",
 
+  // Save / load compositions
+  my_compositions: "My compositions",
+  composition_title: "Composition title",
+  save: "Save",
+  load: "Load",
+  delete: "Delete",
+  login_to_save: "Log in to save your compositions.",
+  title_required: "Please enter a title.",
+
   how_title: "How it works",
   how_body:
     "The Parser splits each line on ':' into a track kind and tokens. Drum tokens become Note objects bound to a percussion Instrument subclass. Melody tokens like C4 or F#5 are converted to frequencies via 440·2^((midi−69)/12). The Sequencer schedules notes ~100ms ahead on the Web Audio clock, keeping timing sample-accurate.",

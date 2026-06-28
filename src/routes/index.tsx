@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AudioEngine, Parser } from "@/lib/audio-engine";
 import { SoundVisualizer } from "@/components/sound-visualizer";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { CompositionBar } from "@/components/composition-bar";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -297,6 +298,12 @@ function Composer() {
     changeBpm(ex.bpm);
   };
 
+  // Load a saved composition: its pattern + tempo.
+  const loadComposition = (pattern: string, savedBpm: number) => {
+    setSource(pattern);
+    changeBpm(savedBpm);
+  };
+
   const changeVolume = (i: number, value: number) => {
     setMix((prev) => prev.map((m, idx) => (idx === i ? { ...m, volume: value } : m)));
     engineRef.current?.setTrackVolume(i, value);
@@ -428,6 +435,9 @@ function Composer() {
               ))}
             </div>
           </div>
+
+          {/* Save / load (signed-in users) */}
+          <CompositionBar source={source} bpm={bpm} onLoad={loadComposition} />
         </div>
 
         {/* Visualizer + grid + mixer */}

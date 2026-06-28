@@ -101,3 +101,40 @@ export function loginUser(body: {
 export function fetchMe(): Promise<AuthUser> {
   return apiFetch<AuthUser>("/api/auth/me");
 }
+
+// --- Compositions -------------------------------------------------
+
+export interface Composition {
+  id: number;
+  title: string;
+  pattern: string;
+  bpm: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CompositionInput {
+  title: string;
+  pattern: string;
+  bpm: number;
+}
+
+/** All compositions owned by the current user (newest first). */
+export function listCompositions(): Promise<Composition[]> {
+  return apiFetch<Composition[]>("/api/compositions");
+}
+
+export function createComposition(body: CompositionInput): Promise<Composition> {
+  return apiFetch<Composition>("/api/compositions", { method: "POST", body });
+}
+
+export function updateComposition(
+  id: number,
+  body: CompositionInput,
+): Promise<Composition> {
+  return apiFetch<Composition>(`/api/compositions/${id}`, { method: "PUT", body });
+}
+
+export function deleteComposition(id: number): Promise<void> {
+  return apiFetch<void>(`/api/compositions/${id}`, { method: "DELETE" });
+}
