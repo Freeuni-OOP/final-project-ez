@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Data access for compositions. Owner-scoped lookups back the private CRUD;
- * the public methods back the explore feed and share links.
+ * the public methods back the explore feed, share links, and profiles.
  */
 public interface CompositionRepository extends JpaRepository<Composition, Long> {
 
@@ -24,4 +24,7 @@ public interface CompositionRepository extends JpaRepository<Composition, Long> 
     Optional<Composition> findBySlugAndIsPublicTrue(String slug);
 
     List<Composition> findByIsPublicTrueOrderByUpdatedAtDesc(Pageable pageable);
+
+    /** A user's published compositions (for their public profile). */
+    List<Composition> findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(User owner);
 }
