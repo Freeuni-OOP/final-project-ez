@@ -3,6 +3,59 @@
 // Override with VITE_API_URL if the backend lives elsewhere.
 export const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 
+// The current bearer token, held in memory and attached to every request. The
+// auth provider keeps this in sync with localStorage (set on login/hydrate,
+// cleared on logout). Kept out of React state so non-React callers can use it too.
+let authToken: string | null = null;
+
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+}
+
+/** Error carrying the HTTP status and the backend's message (for the UI). */
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+interface RequestOptions {
+  method?: string;
+  body?: unknown;
+}
+
+/** Single fetch helper: JSON in/out, auto Bearer header, typed errors. */
+async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (options.body !== undefined) headers["Content-Type"] = "application/json";
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: options.method ?? "GET",
+    headers,
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+  });
+
+  if (!res.ok) {
+    let message = `Request failed (${res.status})`;
+    try {
+      const data = (await res.json()) as { message?: string; error?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // non-JSON error body — keep the default message
+    }
+    throw new ApiError(message, res.status);
+  }
+
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
+// --- Health -------------------------------------------------------
+
 /** Pings the backend health endpoint. Returns the body, or null if unreachable. */
 export async function getHealth(): Promise<{ status: string } | null> {
   try {
@@ -12,4 +65,39 @@ export async function getHealth(): Promise<{ status: string } | null> {
   } catch {
     return null;
   }
+}
+
+// --- Auth ---------------------------------------------------------
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface AuthResult {
+  token: string;
+  tokenType: string;
+  user: AuthUser;
+}
+
+export function registerUser(body: {
+  username: string;
+  email: string;
+  password: string;
+}): Promise<AuthUser> {
+  return apiFetch<AuthUser>("/api/auth/register", { method: "POST", body });
+}
+
+export function loginUser(body: {
+  username: string;
+  password: string;
+}): Promise<AuthResult> {
+  return apiFetch<AuthResult>("/api/auth/login", { method: "POST", body });
+}
+
+/** Current user for the active token. Throws ApiError(401) if the token is bad. */
+export function fetchMe(): Promise<AuthUser> {
+  return apiFetch<AuthUser>("/api/auth/me");
 }

@@ -28,6 +28,15 @@ const strings = {
   visualizer: "Visualizer",
   errors: "Pattern errors",
 
+  // Auth
+  login: "Log in",
+  signup: "Sign up",
+  logout: "Log out",
+  username: "Username",
+  login_id: "Username or email",
+  email: "Email",
+  password: "Password",
+
   how_title: "How it works",
   how_body:
     "The Parser splits each line on ':' into a track kind and tokens. Drum tokens become Note objects bound to a percussion Instrument subclass. Melody tokens like C4 or F#5 are converted to frequencies via 440·2^((midi−69)/12). The Sequencer schedules notes ~100ms ahead on the Web Audio clock, keeping timing sample-accurate.",
