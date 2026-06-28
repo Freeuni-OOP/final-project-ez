@@ -13,9 +13,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * Stateless, token-based security. CSRF is disabled (no cookies/sessions), CORS
- * uses the shared CorsConfigurationSource bean, registration/login/health are
- * open, and everything else under /api/** (including /api/auth/me) requires a
- * valid JWT.
+ * uses the shared CorsConfigurationSource bean, registration/login/health and the
+ * public read API are open, and everything else under /api/** (including
+ * /api/auth/me) requires a valid JWT.
  */
 @Configuration
 public class SecurityConfig {
@@ -35,9 +35,13 @@ public class SecurityConfig {
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Public: registration, login, health. Everything else
-                        // under /api (including /api/auth/me) needs a valid JWT.
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/health")
+                        // Public: registration, login, health, and the public read API.
+                        // Everything else under /api (including /api/auth/me) needs a JWT.
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/health",
+                                "/api/public/**")
                         .permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())

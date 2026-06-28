@@ -18,8 +18,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * CRUD for the current user's compositions. Lives under /api/** so the security
- * config requires a valid JWT; the username comes from the authenticated token.
+ * CRUD + publish/unpublish for the current user's compositions. Lives under
+ * /api/** so the security config requires a valid JWT; the username comes from
+ * the authenticated token.
  */
 @RestController
 @RequestMapping("/api/compositions")
@@ -60,5 +61,15 @@ public class CompositionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(Authentication authentication, @PathVariable Long id) {
         compositionService.delete(authentication.getName(), id);
+    }
+
+    @PostMapping("/{id}/publish")
+    public CompositionResponse publish(Authentication authentication, @PathVariable Long id) {
+        return compositionService.publish(authentication.getName(), id);
+    }
+
+    @PostMapping("/{id}/unpublish")
+    public CompositionResponse unpublish(Authentication authentication, @PathVariable Long id) {
+        return compositionService.unpublish(authentication.getName(), id);
     }
 }

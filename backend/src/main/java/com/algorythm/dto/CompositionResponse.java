@@ -3,12 +3,14 @@ package com.algorythm.dto;
 import com.algorythm.model.Composition;
 import java.time.Instant;
 
-/** Public view of a composition (no owner internals exposed). */
+/** Owner's view of a composition, including its publish state + share slug. */
 public record CompositionResponse(
         Long id,
         String title,
         String pattern,
         int bpm,
+        boolean isPublic,
+        String slug,
         Instant createdAt,
         Instant updatedAt) {
 
@@ -18,6 +20,8 @@ public record CompositionResponse(
                 c.getTitle(),
                 c.getPattern(),
                 c.getBpm(),
+                c.isPublic(),
+                c.getSlug(),
                 c.getCreatedAt(),
                 c.getUpdatedAt());
     }

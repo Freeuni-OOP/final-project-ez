@@ -15,7 +15,8 @@ import java.time.Instant;
 
 /**
  * A saved composition (the pattern text + tempo) owned by a user.
- * Maps to the "compositions" table (see V3 migration).
+ * Maps to the "compositions" table (see V3/V4 migrations). A composition can be
+ * published (is_public) and shared via a short unique slug.
  */
 @Entity
 @Table(name = "compositions")
@@ -37,6 +38,13 @@ public class Composition {
 
     @Column(nullable = false)
     private int bpm;
+
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = false;
+
+    /** Short public id for share links; null until published. */
+    @Column(unique = true, length = 32)
+    private String slug;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -99,6 +107,22 @@ public class Composition {
 
     public void setBpm(int bpm) {
         this.bpm = bpm;
+    }
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
     }
 
     public Instant getCreatedAt() {
