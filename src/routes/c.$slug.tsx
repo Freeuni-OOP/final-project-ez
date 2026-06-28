@@ -64,7 +64,15 @@ function PublicComposition_() {
               {comp.title}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {t("by")} {comp.author} · {comp.bpm} {t("bpm")}
+              {t("by")}{" "}
+              <Link
+                to="/u/$username"
+                params={{ username: comp.author }}
+                className="text-primary hover:underline"
+              >
+                {comp.author}
+              </Link>{" "}
+              · {comp.bpm} {t("bpm")}
             </p>
 
             <div className="mt-6 rounded-xl border border-border bg-foreground/5 p-4">

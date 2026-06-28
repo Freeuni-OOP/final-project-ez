@@ -149,7 +149,7 @@ export function unpublishComposition(id: number): Promise<Composition> {
   return apiFetch<Composition>(`/api/compositions/${id}/unpublish`, { method: "POST" });
 }
 
-// --- Public compositions (no auth needed) -------------------------
+// --- Public compositions + profiles (no auth needed) --------------
 
 export interface PublicComposition {
   slug: string;
@@ -173,4 +173,14 @@ export function listPublicCompositions(
 
 export function getPublicComposition(slug: string): Promise<PublicComposition> {
   return apiFetch<PublicComposition>(`/api/public/compositions/${slug}`);
+}
+
+export interface UserProfile {
+  username: string;
+  joinedAt: string;
+  compositions: PublicComposition[];
+}
+
+export function getUserProfile(username: string): Promise<UserProfile> {
+  return apiFetch<UserProfile>(`/api/public/users/${username}`);
 }
