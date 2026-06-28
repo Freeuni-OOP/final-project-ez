@@ -102,13 +102,15 @@ export function fetchMe(): Promise<AuthUser> {
   return apiFetch<AuthUser>("/api/auth/me");
 }
 
-// --- Compositions -------------------------------------------------
+// --- Compositions (owner) -----------------------------------------
 
 export interface Composition {
   id: number;
   title: string;
   pattern: string;
   bpm: number;
+  isPublic: boolean;
+  slug: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -137,4 +139,38 @@ export function updateComposition(
 
 export function deleteComposition(id: number): Promise<void> {
   return apiFetch<void>(`/api/compositions/${id}`, { method: "DELETE" });
+}
+
+export function publishComposition(id: number): Promise<Composition> {
+  return apiFetch<Composition>(`/api/compositions/${id}/publish`, { method: "POST" });
+}
+
+export function unpublishComposition(id: number): Promise<Composition> {
+  return apiFetch<Composition>(`/api/compositions/${id}/unpublish`, { method: "POST" });
+}
+
+// --- Public compositions (no auth needed) -------------------------
+
+export interface PublicComposition {
+  slug: string;
+  title: string;
+  pattern: string;
+  bpm: number;
+  author: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** The explore feed: public compositions, newest first. */
+export function listPublicCompositions(
+  page = 0,
+  size = 20,
+): Promise<PublicComposition[]> {
+  return apiFetch<PublicComposition[]>(
+    `/api/public/compositions?page=${page}&size=${size}`,
+  );
+}
+
+export function getPublicComposition(slug: string): Promise<PublicComposition> {
+  return apiFetch<PublicComposition>(`/api/public/compositions/${slug}`);
 }

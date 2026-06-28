@@ -1,6 +1,6 @@
-// Save / load panel for the composer. Only shows when signed in. Saves the
-// current pattern + BPM under a title, lists the user's saved compositions, and
-// loads or deletes them. All calls go through the API client (token attached).
+// Save / load + publish panel for the composer. Only shows when signed in. Saves
+// the current pattern + BPM under a title, lists the user's saved compositions,
+// loads or deletes them, and publishes/unpublishes (with a copyable share link).
 
 import { useEffect, useState } from "react";
 
@@ -9,6 +9,8 @@ import {
   createComposition,
   deleteComposition,
   listCompositions,
+  publishComposition,
+  unpublishComposition,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
@@ -29,6 +31,7 @@ export function CompositionBar({
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const refresh = () => {
     listCompositions()
@@ -77,6 +80,27 @@ export function CompositionBar({
     }
   };
 
+  const togglePublish = async (c: Composition) => {
+    try {
+      if (c.isPublic) await unpublishComposition(c.id);
+      else await publishComposition(c.id);
+      refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update.");
+    }
+  };
+
+  const copyLink = async (c: Composition) => {
+    if (!c.slug) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/c/${c.slug}`);
+      setCopiedId(c.id);
+      window.setTimeout(() => setCopiedId((id) => (id === c.id ? null : id)), 1500);
+    } catch {
+      // clipboard unavailable — ignore
+    }
+  };
+
   return (
     <div className="rounded-xl border border-border bg-foreground/5 p-4">
       <p className="mb-3 text-sm font-medium">{t("my_compositions")}</p>
@@ -100,32 +124,54 @@ export function CompositionBar({
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
 
       {items.length > 0 && (
-        <ul className="mt-3 space-y-1">
+        <ul className="mt-3 space-y-2">
           {items.map((c) => (
             <li
               key={c.id}
-              className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
+              className="rounded-md border border-border px-3 py-2"
             >
-              <span className="truncate text-sm text-foreground">
-                {c.title}
-                <span className="ml-1 text-xs text-muted-foreground">
-                  · {c.bpm} {t("bpm")}
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate text-sm text-foreground">
+                  {c.title}
+                  <span className="ml-1 text-xs text-muted-foreground">
+                    · {c.bpm} {t("bpm")}
+                  </span>
                 </span>
-              </span>
-              <span className="flex shrink-0 gap-3">
-                <button
-                  onClick={() => onLoad(c.pattern, c.bpm)}
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  {t("load")}
-                </button>
-                <button
-                  onClick={() => remove(c.id)}
-                  className="text-xs text-muted-foreground transition-colors hover:text-destructive"
-                >
-                  {t("delete")}
-                </button>
-              </span>
+                <span className="flex shrink-0 gap-3 text-xs">
+                  <button
+                    onClick={() => onLoad(c.pattern, c.bpm)}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {t("load")}
+                  </button>
+                  <button
+                    onClick={() => togglePublish(c)}
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {c.isPublic ? t("unpublish") : t("publish")}
+                  </button>
+                  <button
+                    onClick={() => remove(c.id)}
+                    className="text-muted-foreground transition-colors hover:text-destructive"
+                  >
+                    {t("delete")}
+                  </button>
+                </span>
+              </div>
+
+              {c.isPublic && c.slug && (
+                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <code className="truncate rounded bg-foreground/10 px-1.5 py-0.5">
+                    /c/{c.slug}
+                  </code>
+                  <button
+                    onClick={() => copyLink(c)}
+                    className="text-primary hover:underline"
+                  >
+                    {copiedId === c.id ? t("link_copied") : t("copy_link")}
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>

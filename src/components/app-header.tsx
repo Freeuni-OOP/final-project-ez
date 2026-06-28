@@ -14,6 +14,7 @@ const navItems = [
   { to: "/", label: "nav_composer" },
   { to: "/library", label: "nav_library" },
   { to: "/syntax", label: "nav_syntax" },
+  { to: "/explore", label: "nav_explore" },
 ] as const;
 
 export function AppHeader() {
