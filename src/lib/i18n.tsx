@@ -12,6 +12,7 @@ const strings = {
   nav_composer: "Composer",
   nav_library: "Library",
   nav_syntax: "Syntax Guide",
+  nav_explore: "Explore",
 
   bpm: "BPM",
   play: "Play",
@@ -45,6 +46,17 @@ const strings = {
   delete: "Delete",
   login_to_save: "Log in to save your compositions.",
   title_required: "Please enter a title.",
+
+  // Publish / explore
+  publish: "Publish",
+  unpublish: "Unpublish",
+  copy_link: "Copy link",
+  link_copied: "Link copied",
+  by: "by",
+  explore_title: "Explore",
+  explore_sub: "Public compositions from the community.",
+  empty_explore: "No public compositions yet — publish one to get started.",
+  not_found: "This composition isn't available.",
 
   how_title: "How it works",
   how_body:
