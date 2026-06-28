@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportError } from "../lib/error-reporting";
 import { AppHeader } from "../components/app-header";
 import { BackendStatus } from "@/components/backend-status";
+import { AuthProvider } from "@/lib/auth";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -125,10 +126,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppHeader />
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <BackendStatus />
-      <Outlet />
+      <AuthProvider>
+        <AppHeader />
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <BackendStatus />
+        <Outlet />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

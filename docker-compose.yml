@@ -21,6 +21,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/algorythm
       SPRING_DATASOURCE_USERNAME: algorythm
       SPRING_DATASOURCE_PASSWORD: algorythm
+      # JWT signing secret. Override by exporting APP_JWT_SECRET on the host;
+      # the default keeps local `docker compose up` working out of the box.
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-dev-only-secret-change-me-0123456789-abcdefghijklmnopqrstuvwxyz}
     ports:
       - "8080:8080"
 
