@@ -47,7 +47,7 @@ const strings = {
   login_to_save: "Log in to save your compositions.",
   title_required: "Please enter a title.",
 
-  // Publish / explore
+  // Publish / explore / profiles
   publish: "Publish",
   unpublish: "Unpublish",
   copy_link: "Copy link",
@@ -56,7 +56,10 @@ const strings = {
   explore_title: "Explore",
   explore_sub: "Public compositions from the community.",
   empty_explore: "No public compositions yet — publish one to get started.",
-  not_found: "This composition isn't available.",
+  not_found: "This isn't available.",
+  joined: "Joined",
+  published_works: "Published compositions",
+  no_published: "No published compositions yet.",
 
   how_title: "How it works",
   how_body:
