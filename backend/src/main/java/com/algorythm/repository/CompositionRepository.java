@@ -2,6 +2,7 @@ package com.algorythm.repository;
 
 import com.algorythm.model.Composition;
 import com.algorythm.model.User;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
@@ -27,4 +28,8 @@ public interface CompositionRepository extends JpaRepository<Composition, Long> 
 
     /** A user's published compositions (for their public profile). */
     List<Composition> findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(User owner);
+
+    /** Published compositions by a set of users (for the following feed). */
+    List<Composition> findByOwnerIdInAndIsPublicTrueOrderByUpdatedAtDesc(
+            Collection<Long> ownerIds, Pageable pageable);
 }
