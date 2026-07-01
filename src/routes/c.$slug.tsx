@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { type PublicComposition, getPublicComposition } from "@/lib/api";
 import { AudioEngine } from "@/lib/audio-engine";
 import { SoundVisualizer } from "@/components/sound-visualizer";
+import { LikeButton } from "@/components/like-button";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/c/$slug")({
@@ -77,12 +78,20 @@ function PublicComposition_() {
 
             <div className="mt-6 rounded-xl border border-border bg-foreground/5 p-4">
               <SoundVisualizer analyser={analyser} className="h-24" />
-              <button
-                onClick={playing ? stop : play}
-                className="mt-3 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                {playing ? t("stop") : t("play")}
-              </button>
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  onClick={playing ? stop : play}
+                  className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  {playing ? t("stop") : t("play")}
+                </button>
+                <LikeButton
+                  key={comp.id}
+                  compositionId={comp.id}
+                  likeCount={comp.likeCount}
+                  likedByMe={comp.likedByMe}
+                />
+              </div>
             </div>
 
             <pre className="mt-4 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground">

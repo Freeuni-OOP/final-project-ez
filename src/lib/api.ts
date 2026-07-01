@@ -152,6 +152,7 @@ export function unpublishComposition(id: number): Promise<Composition> {
 // --- Public compositions + profiles (no auth needed) --------------
 
 export interface PublicComposition {
+  id: number;
   slug: string;
   title: string;
   pattern: string;
@@ -159,6 +160,8 @@ export interface PublicComposition {
   author: string;
   createdAt: string;
   updatedAt: string;
+  likeCount: number;
+  likedByMe: boolean;
 }
 
 /** The explore feed: public compositions, newest first. */
@@ -183,4 +186,17 @@ export interface UserProfile {
 
 export function getUserProfile(username: string): Promise<UserProfile> {
   return apiFetch<UserProfile>(`/api/public/users/${username}`);
+}
+
+
+// --- Likes (auth) -------------------------------------------------
+
+/** Like a public composition. No-op on the server if already liked. */
+export function likeComposition(id: number): Promise<void> {
+  return apiFetch<void>(`/api/compositions/${id}/like`, { method: "POST" });
+}
+
+/** Remove a like from a composition. No-op on the server if not liked. */
+export function unlikeComposition(id: number): Promise<void> {
+  return apiFetch<void>(`/api/compositions/${id}/like`, { method: "DELETE" });
 }
