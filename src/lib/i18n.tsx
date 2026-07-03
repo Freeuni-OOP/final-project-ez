@@ -61,6 +61,14 @@ const strings = {
   published_works: "Published compositions",
   no_published: "No published compositions yet.",
 
+  // Comments
+  comments: "Comments",
+  comment_placeholder: "Add a comment…",
+  post_comment: "Post",
+  login_to_comment: "Log in to comment.",
+  no_comments: "No comments yet.",
+  comments_error: "Couldn't load comments.",
+
   how_title: "How it works",
   how_body:
     "The Parser splits each line on ':' into a track kind and tokens. Drum tokens become Note objects bound to a percussion Instrument subclass. Melody tokens like C4 or F#5 are converted to frequencies via 440·2^((midi−69)/12). The Sequencer schedules notes ~100ms ahead on the Web Audio clock, keeping timing sample-accurate.",
