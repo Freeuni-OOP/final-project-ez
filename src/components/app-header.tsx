@@ -31,7 +31,10 @@ export function AppHeader() {
         </Link>
 
         <nav className="flex items-center gap-1">
-          {navItems.map((item) => {
+          {(user
+            ? [...navItems, { to: "/feed", label: "nav_feed" } as const]
+            : navItems
+          ).map((item) => {
             const active = pathname === item.to;
             return (
               <Link
