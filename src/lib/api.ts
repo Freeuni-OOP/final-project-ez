@@ -152,6 +152,7 @@ export function unpublishComposition(id: number): Promise<Composition> {
 // --- Public compositions + profiles (no auth needed) --------------
 
 export interface PublicComposition {
+  id: number;
   slug: string;
   title: string;
   pattern: string;
@@ -183,4 +184,32 @@ export interface UserProfile {
 
 export function getUserProfile(username: string): Promise<UserProfile> {
   return apiFetch<UserProfile>(`/api/public/users/${username}`);
+}
+
+
+// --- Comments -----------------------------------------------------
+
+export interface Comment {
+  id: number;
+  author: string;
+  body: string;
+  createdAt: string;
+}
+
+/** Comments on a public composition, oldest first. No auth needed. */
+export function listComments(slug: string): Promise<Comment[]> {
+  return apiFetch<Comment[]>(`/api/public/compositions/${slug}/comments`);
+}
+
+/** Post a comment on a composition (auth). */
+export function postComment(compositionId: number, body: string): Promise<Comment> {
+  return apiFetch<Comment>(`/api/compositions/${compositionId}/comments`, {
+    method: "POST",
+    body: { body },
+  });
+}
+
+/** Delete a comment you authored (auth). */
+export function deleteComment(id: number): Promise<void> {
+  return apiFetch<void>(`/api/comments/${id}`, { method: "DELETE" });
 }

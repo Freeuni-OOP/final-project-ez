@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { type PublicComposition, getPublicComposition } from "@/lib/api";
 import { AudioEngine } from "@/lib/audio-engine";
 import { SoundVisualizer } from "@/components/sound-visualizer";
+import { CommentSection } from "@/components/comment-section";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/c/$slug")({
@@ -88,6 +89,8 @@ function PublicComposition_() {
             <pre className="mt-4 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground">
               {comp.pattern}
             </pre>
+
+            <CommentSection slug={comp.slug} compositionId={comp.id} />
           </>
         )}
 
