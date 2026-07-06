@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { type PublicComposition, listPublicCompositions } from "@/lib/api";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { LikeButton } from "@/components/like-button";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/explore")({
@@ -61,6 +62,13 @@ function Explore() {
                   <p className="mt-3 truncate font-mono text-[11px] text-muted-foreground">
                     {c.pattern.split("\n")[0]}
                   </p>
+                  <div className="mt-3 flex justify-end">
+                    <LikeButton
+                      compositionId={c.id}
+                      likeCount={c.likeCount}
+                      likedByMe={c.likedByMe}
+                    />
+                  </div>
                 </SpotlightCard>
               </Link>
             ))}
