@@ -1,7 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { type UserProfile, getUserProfile } from "@/lib/api";
+import {
+  type UserProfile,
+  followUser,
+  getUserProfile,
+  unfollowUser,
+} from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
 
@@ -12,9 +18,13 @@ export const Route = createFileRoute("/u/$username")({
 function Profile() {
   const { username } = Route.useParams();
   const { t } = useI18n();
+  const { user } = useAuth();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState(false);
+  const [following, setFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -32,6 +42,31 @@ function Profile() {
     };
   }, [username]);
 
+  // Keep the follow button + follower count in sync with the loaded profile.
+  useEffect(() => {
+    if (profile) {
+      setFollowing(profile.isFollowing);
+      setFollowerCount(profile.followerCount);
+    }
+  }, [profile]);
+
+  const toggleFollow = async () => {
+    if (busy || !profile) return;
+    const next = !following;
+    setFollowing(next);
+    setFollowerCount((n) => n + (next ? 1 : -1));
+    setBusy(true);
+    try {
+      if (next) await followUser(profile.username);
+      else await unfollowUser(profile.username);
+    } catch {
+      setFollowing(!next);
+      setFollowerCount((n) => n + (next ? -1 : 1));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="mx-auto max-w-6xl px-6 py-12">
@@ -47,6 +82,34 @@ function Profile() {
             <p className="mt-1 text-sm text-muted-foreground">
               {t("joined")} {new Date(profile.joinedAt).toLocaleDateString()}
             </p>
+
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  {followerCount}
+                </span>{" "}
+                {t("followers")} ·{" "}
+                <span className="font-semibold text-foreground">
+                  {profile.followingCount}
+                </span>{" "}
+                {t("following")}
+              </p>
+              {user && user.username !== profile.username && (
+                <button
+                  type="button"
+                  onClick={toggleFollow}
+                  disabled={busy}
+                  aria-pressed={following}
+                  className={
+                    following
+                      ? "rounded-md border border-border px-4 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:opacity-60"
+                      : "rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+                  }
+                >
+                  {following ? t("unfollow") : t("follow")}
+                </button>
+              )}
+            </div>
 
             <h2 className="mt-8 mb-4 text-lg font-semibold">
               {t("published_works")}
