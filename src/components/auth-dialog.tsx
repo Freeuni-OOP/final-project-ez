@@ -1,7 +1,14 @@
 // Login / sign-up modal. Tabbed between the two modes, with basic client-side
 // validation and backend error messages surfaced inline. Closes on success.
+//
+// Rendered through a portal to document.body so it floats above the whole page
+// and centers in the viewport — otherwise the header's backdrop-blur would trap
+// its fixed positioning inside the header bar. Closes on the X button, the
+// Escape key, or a click on the backdrop (in both modes).
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
@@ -25,6 +32,15 @@ export function AuthDialog({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Close on Escape.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,15 +76,29 @@ export function AuthDialog({
         : "text-muted-foreground hover:text-foreground",
     );
 
-  return (
+  // Portal target only exists on the client; render nothing during SSR.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
-        className="w-full max-w-sm rounded-xl border border-border bg-background p-6 shadow-xl"
+        className="relative w-full max-w-sm rounded-xl border border-border bg-background p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("close")}
+          className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
         <div className="mb-4 flex gap-1 rounded-lg border border-border p-1">
           <button type="button" className={tabClass("login")} onClick={() => setMode("login")}>
             {t("login")}
@@ -134,6 +164,7 @@ export function AuthDialog({
           </button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -37,6 +37,7 @@ const strings = {
   login_id: "Username or email",
   email: "Email",
   password: "Password",
+  close: "Close",
 
   // Save / load compositions
   my_compositions: "My compositions",
