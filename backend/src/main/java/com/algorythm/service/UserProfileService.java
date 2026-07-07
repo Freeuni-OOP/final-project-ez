@@ -12,20 +12,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Builds a public profile: the user's public info + their published compositions. */
+/**
+ * Builds a public profile: the user's public info, follow stats, and their
+ * published compositions.
+ */
 @Service
 public class UserProfileService {
 
     private final UserRepository users;
     private final CompositionRepository compositions;
     private final LikeService likeService;
+    private final FollowService followService;
 
     public UserProfileService(UserRepository users,
                               CompositionRepository compositions,
-                              LikeService likeService) {
+                              LikeService likeService,
+                              FollowService followService) {
         this.users = users;
         this.compositions = compositions;
         this.likeService = likeService;
+        this.followService = followService;
     }
 
     /** viewerUsername is the logged-in user, or null for anonymous requests. */
@@ -39,6 +45,23 @@ public class UserProfileService {
                 compositions.findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(user);
         List<PublicCompositionResponse> published = likeService.toResponses(list, viewerUsername);
 
-        return new UserProfileResponse(user.getUsername(), user.getCreatedAt(), published);
+        long followerCount = followService.followerCount(user.getId());
+        long followingCount = followService.followingCount(user.getId());
+        boolean isFollowing = followService.isFollowing(viewerId(viewerUsername), user.getId());
+
+        return new UserProfileResponse(
+                user.getUsername(),
+                user.getCreatedAt(),
+                followerCount,
+                followingCount,
+                isFollowing,
+                published);
+    }
+
+    private Long viewerId(String viewerUsername) {
+        if (viewerUsername == null) {
+            return null;
+        }
+        return users.findByUsername(viewerUsername).map(User::getId).orElse(null);
     }
 }

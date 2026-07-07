@@ -178,9 +178,33 @@ export function getPublicComposition(slug: string): Promise<PublicComposition> {
 export interface UserProfile {
   username: string;
   joinedAt: string;
+  followerCount: number;
+  followingCount: number;
+  isFollowing: boolean;
   compositions: PublicComposition[];
 }
 
 export function getUserProfile(username: string): Promise<UserProfile> {
   return apiFetch<UserProfile>(`/api/public/users/${username}`);
+}
+
+
+
+// --- Follows + feed (auth) ----------------------------------------
+
+/** Follow a user. No-op on the server if already following. */
+export function followUser(username: string): Promise<void> {
+  return apiFetch<void>(`/api/users/${username}/follow`, { method: "POST" });
+}
+
+/** Stop following a user. No-op on the server if not following. */
+export function unfollowUser(username: string): Promise<void> {
+  return apiFetch<void>(`/api/users/${username}/follow`, { method: "DELETE" });
+}
+
+/** Public compositions by people the current user follows, newest first. */
+export function getFollowingFeed(page = 0, size = 20): Promise<PublicComposition[]> {
+  return apiFetch<PublicComposition[]>(
+    `/api/feed/following?page=${page}&size=${size}`,
+  );
 }

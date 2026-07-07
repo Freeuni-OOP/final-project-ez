@@ -13,6 +13,7 @@ const strings = {
   nav_library: "Library",
   nav_syntax: "Syntax Guide",
   nav_explore: "Explore",
+  nav_feed: "Feed",
 
   bpm: "BPM",
   play: "Play",
@@ -61,6 +62,16 @@ const strings = {
   joined: "Joined",
   published_works: "Published compositions",
   no_published: "No published compositions yet.",
+
+  // Follows + feed
+  follow: "Follow",
+  unfollow: "Unfollow",
+  followers: "Followers",
+  following: "Following",
+  feed_title: "Following",
+  feed_sub: "New public work from people you follow.",
+  empty_feed: "Nothing here yet — follow someone to see their work.",
+  login_to_feed: "Log in to see your following feed.",
 
   how_title: "How it works",
   how_body:
