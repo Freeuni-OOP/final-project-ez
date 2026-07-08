@@ -208,3 +208,21 @@ export function getFollowingFeed(page = 0, size = 20): Promise<PublicComposition
     `/api/feed/following?page=${page}&size=${size}`,
   );
 }
+
+
+export interface Comment {
+  id: number;
+  body: string;
+  author: string;
+  createdAt: string;
+}
+
+export function listComments(
+  slug: string,
+  page = 0,
+  size = 20,
+): Promise<Comment[]> {
+  return apiFetch<Comment[]>(
+    `/api/public/compositions/${slug}/comments?page=${page}&size=${size}`,
+  );
+}
