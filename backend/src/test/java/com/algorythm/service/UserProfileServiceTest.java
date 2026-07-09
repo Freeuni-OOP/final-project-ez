@@ -1,11 +1,13 @@
 package com.algorythm.service;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 
 import com.algorythm.dto.PublicCompositionResponse;
 import com.algorythm.dto.UserProfileResponse;
@@ -23,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+
 /**
  * Unit tests for building a public profile. Repositories and the like/follow
  * services are mocked; the real end-to-end shape (only published work, no email)
@@ -31,26 +34,31 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class UserProfileServiceTest {
 
+
     @Mock private UserRepository users;
     @Mock private CompositionRepository compositions;
     @Mock private LikeService likeService;
     @Mock private FollowService followService;
 
+
     private UserProfileService userProfileService;
 
+
     private final User alice = new User("alice", "alice@example.com", "hashed-pw");
+
 
     @BeforeEach
     void setUp() {
         userProfileService = new UserProfileService(users, compositions, likeService, followService);
     }
 
+
     @Test
     void getProfile_returnsThePublishedCompositionsAndStatsForTheUser() {
         Composition published = new Composition(alice, "Song", "pattern", 100);
         PublicCompositionResponse response =
                 new PublicCompositionResponse(
-                        "slug1", "Song", "pattern", 100, "alice", null, null, 2L, false);
+                        "slug1", "Song", "pattern", 100, "alice", null, null, 2L, false, List.of());
         when(users.findByUsername("alice")).thenReturn(Optional.of(alice));
         when(compositions.findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(alice))
                 .thenReturn(List.of(published));
@@ -59,7 +67,9 @@ class UserProfileServiceTest {
         when(followService.followingCount(alice.getId())).thenReturn(3L);
         when(followService.isFollowing(null, alice.getId())).thenReturn(false);
 
+
         UserProfileResponse profile = userProfileService.getProfile("alice", null);
+
 
         assertThat(profile.username()).isEqualTo("alice");
         assertThat(profile.followerCount()).isEqualTo(5L);
@@ -68,18 +78,22 @@ class UserProfileServiceTest {
         assertThat(profile.compositions()).containsExactly(response);
     }
 
+
     @Test
     void getProfile_returnsNotFoundForAnUnknownUsername() {
         when(users.findByUsername("ghost")).thenReturn(Optional.empty());
+
 
         ResponseStatusException ex =
                 assertThrows(
                         ResponseStatusException.class,
                         () -> userProfileService.getProfile("ghost", null));
 
+
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         verify(compositions, never()).findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(any());
     }
+
 
     @Test
     void getProfile_looksUpTheViewerWhenAViewerUsernameIsGiven() {
@@ -90,7 +104,9 @@ class UserProfileServiceTest {
                 .thenReturn(List.of());
         when(likeService.toResponses(List.of(), "bob")).thenReturn(List.of());
 
+
         userProfileService.getProfile("alice", "bob");
+
 
         // real numeric-id correctness of isFollowing is proven end-to-end by
         // PublicUserControllerIntegrationTest; here we only prove the viewer
@@ -98,6 +114,7 @@ class UserProfileServiceTest {
         verify(users).findByUsername("bob");
         verify(followService).isFollowing(any(), any());
     }
+
 
     @Test
     void getProfile_treatsAnUnresolvableViewerUsernameAsAnonymous() {
@@ -107,8 +124,13 @@ class UserProfileServiceTest {
                 .thenReturn(List.of());
         when(likeService.toResponses(List.of(), "ghost-viewer")).thenReturn(List.of());
 
+
         userProfileService.getProfile("alice", "ghost-viewer");
+
 
         verify(followService).isFollowing(null, alice.getId());
     }
 }
+
+
+

@@ -7,12 +7,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.algorythm.model.Composition;
 import com.algorythm.model.CompositionLike;
+import com.algorythm.model.Tag;
 import com.algorythm.model.User;
 import com.algorythm.repository.CompositionLikeRepository;
 import com.algorythm.repository.CompositionRepository;
+import com.algorythm.repository.TagRepository;
 import com.algorythm.repository.UserRepository;
 import com.algorythm.security.JwtService;
 import com.algorythm.support.AbstractIntegrationTest;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,7 @@ class PublicCompositionControllerIntegrationTest extends AbstractIntegrationTest
     @Autowired private UserRepository userRepository;
     @Autowired private CompositionRepository compositionRepository;
     @Autowired private CompositionLikeRepository likeRepository;
+    @Autowired private TagRepository tagRepository;
 
     private User alice;
     private User bob;
@@ -96,6 +100,84 @@ class PublicCompositionControllerIntegrationTest extends AbstractIntegrationTest
         mockMvc.perform(get("/api/public/compositions").param("size", "5000"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    // --- feed filtered by tag -------------------------------------------------
+
+    @Test
+    void feed_filteredByTag_returnsOnlyCompositionsCarryingThatTag() throws Exception {
+        Tag lofi = tagRepository.save(new Tag("lofi"));
+        Tag chill = tagRepository.save(new Tag("chill"));
+
+        Composition tagged = publish(alice, "Lofi jam", "tagfeed1");
+        tagged.setTags(Set.of(lofi));
+        compositionRepository.save(tagged);
+
+        Composition otherTag = publish(alice, "Chill jam", "tagfeed2");
+        otherTag.setTags(Set.of(chill));
+        compositionRepository.save(otherTag);
+
+        mockMvc.perform(get("/api/public/compositions").param("tag", "lofi"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].slug").value("tagfeed1"))
+                .andExpect(jsonPath("$[0].tags[0]").value("lofi"));
+    }
+
+    @Test
+    void feed_filteredByTag_matchesRegardlessOfCasing() throws Exception {
+        Tag lofi = tagRepository.save(new Tag("lofi"));
+        Composition tagged = publish(alice, "Lofi jam", "tagfeed3");
+        tagged.setTags(Set.of(lofi));
+        compositionRepository.save(tagged);
+
+        mockMvc.perform(get("/api/public/compositions").param("tag", "  LoFi  "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void feed_withAnUnusedTag_returnsAnEmptyList() throws Exception {
+        publish(alice, "Untagged", "tagfeed4");
+
+        mockMvc.perform(get("/api/public/compositions").param("tag", "no-such-tag"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    // --- search ----------------------------------------------------------
+
+    @Test
+    void search_matchesByTitle() throws Exception {
+        publish(alice, "Midnight Drive", "searchslug1");
+        publish(alice, "Morning Walk", "searchslug2");
+
+        mockMvc.perform(get("/api/public/compositions/search").param("q", "midnight"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].slug").value("searchslug1"));
+    }
+
+    @Test
+    void search_matchesByTagName() throws Exception {
+        Tag lofi = tagRepository.save(new Tag("lofi"));
+        Composition tagged = publish(alice, "Untitled", "searchslug3");
+        tagged.setTags(Set.of(lofi));
+        compositionRepository.save(tagged);
+
+        mockMvc.perform(get("/api/public/compositions/search").param("q", "lofi"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].slug").value("searchslug3"));
+    }
+
+    @Test
+    void search_excludesPrivateCompositions() throws Exception {
+        compositionRepository.save(new Composition(alice, "Midnight Drive", "pattern", 100));
+
+        mockMvc.perform(get("/api/public/compositions/search").param("q", "midnight"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     // --- getBySlug -----------------------------------------------------------

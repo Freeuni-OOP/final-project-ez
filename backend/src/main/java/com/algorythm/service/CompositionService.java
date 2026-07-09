@@ -28,10 +28,13 @@ public class CompositionService {
 
     private final CompositionRepository compositions;
     private final UserRepository users;
+    private final TagService tagService;
 
-    public CompositionService(CompositionRepository compositions, UserRepository users) {
+    public CompositionService(
+            CompositionRepository compositions, UserRepository users, TagService tagService) {
         this.compositions = compositions;
         this.users = users;
+        this.tagService = tagService;
     }
 
     @Transactional(readOnly = true)
@@ -50,8 +53,10 @@ public class CompositionService {
     @Transactional
     public CompositionResponse create(String username, CompositionRequest request) {
         User owner = currentUser(username);
-        Composition saved = compositions.save(
-                new Composition(owner, request.title(), request.pattern(), request.bpm()));
+        Composition composition =
+                new Composition(owner, request.title(), request.pattern(), request.bpm());
+        composition.setTags(tagService.resolve(request.tags()));
+        Composition saved = compositions.save(composition);
         return CompositionResponse.from(saved);
     }
 
@@ -61,6 +66,7 @@ public class CompositionService {
         composition.setTitle(request.title());
         composition.setPattern(request.pattern());
         composition.setBpm(request.bpm());
+        composition.setTags(tagService.resolve(request.tags()));
         return CompositionResponse.from(composition); // managed entity flushes on commit
     }
 

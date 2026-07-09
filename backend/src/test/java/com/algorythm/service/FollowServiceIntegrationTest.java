@@ -1,8 +1,10 @@
 package com.algorythm.service;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 import com.algorythm.model.User;
 import com.algorythm.repository.UserRepository;
@@ -14,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+
 /**
  * End-to-end coverage of follow/unfollow against a real Postgres (via
  * AbstractIntegrationTest): runs through the real FollowService + repository,
@@ -24,11 +27,14 @@ import org.springframework.web.server.ResponseStatusException;
 @Transactional
 class FollowServiceIntegrationTest extends AbstractIntegrationTest {
 
+
     @Autowired private FollowService followService;
     @Autowired private UserRepository userRepository;
 
+
     private User alice;
     private User bob;
+
 
     @BeforeEach
     void setUp() {
@@ -36,24 +42,29 @@ class FollowServiceIntegrationTest extends AbstractIntegrationTest {
         bob = userRepository.save(new User("bob", "bob@example.com", "hashed-pw"));
     }
 
+
     @Test
     void follow_thenUnfollow_roundTrips() {
         followService.follow("alice", "bob");
         assertThat(followService.followerCount(bob.getId())).isEqualTo(1);
         assertThat(followService.isFollowing(alice.getId(), bob.getId())).isTrue();
 
+
         followService.unfollow("alice", "bob");
         assertThat(followService.followerCount(bob.getId())).isEqualTo(0);
         assertThat(followService.isFollowing(alice.getId(), bob.getId())).isFalse();
     }
+
 
     @Test
     void follow_isIdempotent_followingTwiceCreatesNoDuplicate() {
         followService.follow("alice", "bob");
         followService.follow("alice", "bob");
 
+
         assertThat(followService.followerCount(bob.getId())).isEqualTo(1);
     }
+
 
     @Test
     void unfollow_isHarmlessWhenNeverFollowed() {
@@ -61,15 +72,18 @@ class FollowServiceIntegrationTest extends AbstractIntegrationTest {
         assertThat(followService.followerCount(bob.getId())).isEqualTo(0);
     }
 
+
     @Test
     void follow_rejectsFollowingYourself() {
         ResponseStatusException ex =
                 assertThrows(
                         ResponseStatusException.class, () -> followService.follow("alice", "alice"));
 
+
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(followService.followerCount(alice.getId())).isEqualTo(0);
     }
+
 
     @Test
     void follow_rejectsAnUnknownTargetUser() {
@@ -78,8 +92,10 @@ class FollowServiceIntegrationTest extends AbstractIntegrationTest {
                         ResponseStatusException.class,
                         () -> followService.follow("alice", "ghost"));
 
+
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
+
 
     @Test
     void followerAndFollowingCountsAndIsFollowing_areCorrectForEveryoneInvolved() {
@@ -87,12 +103,17 @@ class FollowServiceIntegrationTest extends AbstractIntegrationTest {
         followService.follow("alice", "bob");
         followService.follow("carol", "bob");
 
+
         assertThat(followService.followerCount(bob.getId())).isEqualTo(2);
         assertThat(followService.followingCount(alice.getId())).isEqualTo(1);
         assertThat(followService.followingCount(bob.getId())).isEqualTo(0);
+
 
         assertThat(followService.isFollowing(alice.getId(), bob.getId())).isTrue();
         assertThat(followService.isFollowing(bob.getId(), alice.getId())).isFalse();
         assertThat(followService.isFollowing(null, bob.getId())).isFalse();
     }
 }
+
+
+

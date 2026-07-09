@@ -13,9 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Public read access to published compositions. Lives under /api/public/** which
- * the security config leaves open (no token required) — the explore feed and
- * share links. A token is optional here: if one is sent, likedByMe reflects that
- * user; if not, likedByMe is false.
+ * the security config leaves open (no token required) — the explore feed
+ * (optionally filtered by tag), text search, and share links. A token is
+ * optional here: if one is sent, likedByMe reflects that user; if not,
+ * likedByMe is false.
  */
 @RestController
 @RequestMapping("/api/public/compositions")
@@ -31,8 +32,18 @@ public class PublicCompositionController {
     public List<PublicCompositionResponse> feed(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String tag) {
+        return publicCompositionService.feed(page, size, tag, viewer(authentication));
+    }
+
+    @GetMapping("/search")
+    public List<PublicCompositionResponse> search(
+            Authentication authentication,
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return publicCompositionService.feed(page, size, viewer(authentication));
+        return publicCompositionService.search(q, page, size, viewer(authentication));
     }
 
     @GetMapping("/{slug}")
