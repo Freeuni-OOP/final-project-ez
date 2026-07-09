@@ -16,13 +16,7 @@ import { cn } from "@/lib/utils";
 
 type Mode = "login" | "signup";
 
-export function AuthDialog({
-  initialMode,
-  onClose,
-}: {
-  initialMode: Mode;
-  onClose: () => void;
-}) {
+export function AuthDialog({ initialMode, onClose }: { initialMode: Mode; onClose: () => void }) {
   const { login, register } = useAuth();
   const { t } = useI18n();
 
@@ -71,9 +65,7 @@ export function AuthDialog({
   const tabClass = (m: Mode) =>
     cn(
       "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-      mode === m
-        ? "bg-primary/10 text-primary"
-        : "text-muted-foreground hover:text-foreground",
+      mode === m ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
     );
 
   // Portal target only exists on the client; render nothing during SSR.

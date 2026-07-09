@@ -225,9 +225,7 @@ function Library() {
       <section className="mx-auto max-w-6xl px-6 py-12">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {t("lib_title")}
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("lib_title")}</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
               {t("lib_sub")}
             </p>

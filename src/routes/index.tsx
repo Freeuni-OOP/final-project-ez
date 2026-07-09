@@ -180,15 +180,11 @@ function Hero() {
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
         <h1 className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
           <span className="hero-code text-5xl text-foreground sm:text-7xl">code</span>
-          <span className="text-2xl font-light text-muted-foreground sm:text-4xl">
-            becomes
-          </span>
+          <span className="text-2xl font-light text-muted-foreground sm:text-4xl">becomes</span>
           <span className="hero-music text-6xl text-primary sm:text-8xl">music</span>
         </h1>
 
-        <p className="mt-8 max-w-xl text-sm text-muted-foreground sm:text-base">
-          {t("tagline")}
-        </p>
+        <p className="mt-8 max-w-xl text-sm text-muted-foreground sm:text-base">{t("tagline")}</p>
 
         <button
           onClick={scrollToComposer}
@@ -328,10 +324,7 @@ function Composer() {
       <Hero />
 
       {/* Composer */}
-      <div
-        id="composer"
-        className="mx-auto grid max-w-6xl gap-6 px-6 py-12 lg:grid-cols-2"
-      >
+      <div id="composer" className="mx-auto grid max-w-6xl gap-6 px-6 py-12 lg:grid-cols-2">
         {/* Editor + controls */}
         <div className="flex flex-col gap-4">
           <div className="rounded-xl border border-border bg-foreground/5 p-4">
@@ -384,9 +377,7 @@ function Composer() {
                   onChange={(e) => changeMaster(Number(e.target.value))}
                   className="accent-primary"
                 />
-                <span className="w-9 tabular-nums text-foreground">
-                  {Math.round(master * 100)}
-                </span>
+                <span className="w-9 tabular-nums text-foreground">{Math.round(master * 100)}</span>
               </label>
             </div>
 
@@ -417,11 +408,7 @@ function Composer() {
             <p className="mb-3 text-sm font-medium">{t("examples")}</p>
             <div className="grid gap-3 sm:grid-cols-3">
               {EXAMPLES.map((ex) => (
-                <SpotlightCard
-                  key={ex.name}
-                  onClick={() => loadExample(ex)}
-                  className="p-3"
-                >
+                <SpotlightCard key={ex.name} onClick={() => loadExample(ex)} className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium text-foreground">{ex.name}</p>
                     <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] tabular-nums text-muted-foreground">

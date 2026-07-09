@@ -6,21 +6,9 @@
 // and client, and localStorage is only touched inside effects/handlers — never
 // during render — so hydration stays clean.
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-import {
-  type AuthUser,
-  fetchMe,
-  loginUser,
-  registerUser,
-  setAuthToken,
-} from "@/lib/api";
+import { type AuthUser, fetchMe, loginUser, registerUser, setAuthToken } from "@/lib/api";
 
 const TOKEN_KEY = "algorythm_token";
 

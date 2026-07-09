@@ -126,10 +126,7 @@ export function CompositionBar({
       {items.length > 0 && (
         <ul className="mt-3 space-y-2">
           {items.map((c) => (
-            <li
-              key={c.id}
-              className="rounded-md border border-border px-3 py-2"
-            >
+            <li key={c.id} className="rounded-md border border-border px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-sm text-foreground">
                   {c.title}
@@ -164,10 +161,7 @@ export function CompositionBar({
                   <code className="truncate rounded bg-foreground/10 px-1.5 py-0.5">
                     /c/{c.slug}
                   </code>
-                  <button
-                    onClick={() => copyLink(c)}
-                    className="text-primary hover:underline"
-                  >
+                  <button onClick={() => copyLink(c)} className="text-primary hover:underline">
                     {copiedId === c.id ? t("link_copied") : t("copy_link")}
                   </button>
                 </div>
