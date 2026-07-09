@@ -18,9 +18,11 @@ import {
   getUserProfile,
   listCompositions,
   listPublicCompositions,
+  searchPublicCompositions,
   publishComposition,
   unfollowUser,
   unpublishComposition,
+  updateComposition,
 } from "@/lib/api";
 
 // --- Health ------------------------------------------------------------
@@ -34,13 +36,15 @@ export function useBackendHealth() {
 
 // --- Public reads --------------------------------------------------------
 
-export function usePublicCompositions(page = 0, size = 20) {
+export function usePublicCompositions(page = 0, size = 20, tag?: string, search = "") {
   return useQuery({
-    queryKey: ["publicCompositions", page, size],
-    queryFn: () => listPublicCompositions(page, size),
+    queryKey: ["publicCompositions", page, size, tag ?? "", search],
+    queryFn: () =>
+      search.trim()
+        ? searchPublicCompositions(search.trim())
+        : listPublicCompositions(page, size, tag),
   });
 }
-
 export function usePublicComposition(slug: string) {
   return useQuery({
     queryKey: ["publicComposition", slug],
@@ -84,6 +88,14 @@ export function useCreateComposition() {
   const invalidate = useInvalidateMyCompositions();
   return useMutation({
     mutationFn: (body: CompositionInput) => createComposition(body),
+    onSuccess: invalidate,
+  });
+}
+export function useUpdateComposition() {
+  const invalidate = useInvalidateMyCompositions();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: CompositionInput }) =>
+      updateComposition(id, body),
     onSuccess: invalidate,
   });
 }

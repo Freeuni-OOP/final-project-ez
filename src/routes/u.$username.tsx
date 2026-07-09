@@ -68,6 +68,20 @@ function Profile() {
                       <p className="mt-1 text-xs text-muted-foreground">
                         {c.bpm} {t("bpm")}
                       </p>
+
+                      {c.tags.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {c.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full border border-border px-2 py-1 text-xs text-muted-foreground"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       <p className="mt-3 truncate font-mono text-[11px] text-muted-foreground">
                         {c.pattern.split("\n")[0]}
                       </p>

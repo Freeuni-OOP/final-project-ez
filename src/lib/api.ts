@@ -108,6 +108,7 @@ export interface Composition {
   bpm: number;
   isPublic: boolean;
   slug: string | null;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -116,8 +117,8 @@ export interface CompositionInput {
   title: string;
   pattern: string;
   bpm: number;
+  tags: string[];
 }
-
 /** All compositions owned by the current user (newest first). */
 export function listCompositions(): Promise<Composition[]> {
   return apiFetch<Composition[]>("/api/compositions");
@@ -151,13 +152,31 @@ export interface PublicComposition {
   pattern: string;
   bpm: number;
   author: string;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 }
 
 /** The explore feed: public compositions, newest first. */
-export function listPublicCompositions(page = 0, size = 20): Promise<PublicComposition[]> {
-  return apiFetch<PublicComposition[]>(`/api/public/compositions?page=${page}&size=${size}`);
+export function listPublicCompositions(
+  page = 0,
+  size = 20,
+  tag?: string,
+): Promise<PublicComposition[]> {
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+  });
+
+  if (tag) params.set("tag", tag);
+
+  return apiFetch<PublicComposition[]>(`/api/public/compositions?${params.toString()}`);
+}
+
+export function searchPublicCompositions(query: string): Promise<PublicComposition[]> {
+  return apiFetch<PublicComposition[]>(
+    `/api/public/compositions/search?q=${encodeURIComponent(query)}`,
+  );
 }
 
 export function getPublicComposition(slug: string): Promise<PublicComposition> {

@@ -1,7 +1,3 @@
-// Save / load + publish panel for the composer. Only shows when signed in. Saves
-// the current pattern + BPM under a title, lists the user's saved compositions,
-// loads or deletes them, and publishes/unpublishes (with a copyable share link).
-
 import { useState } from "react";
 
 import { type Composition } from "@/lib/api";
@@ -12,6 +8,7 @@ import {
   useDeleteComposition,
   useMyCompositions,
   useTogglePublish,
+  useUpdateComposition,
 } from "@/lib/queries";
 
 export function CompositionBar({
@@ -28,10 +25,13 @@ export function CompositionBar({
 
   const { data: items = [] } = useMyCompositions(user?.username);
   const createMutation = useCreateComposition();
+  const updateMutation = useUpdateComposition();
   const deleteMutation = useDeleteComposition();
   const toggleMutation = useTogglePublish();
 
   const [title, setTitle] = useState("");
+  const [tagsText, setTagsText] = useState("");
+  const [editing, setEditing] = useState<Composition | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
@@ -43,23 +43,55 @@ export function CompositionBar({
     );
   }
 
+  const parseTags = () =>
+    tagsText
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+
+  const resetForm = () => {
+    setTitle("");
+    setTagsText("");
+    setEditing(null);
+  };
+
   const save = async () => {
     setError(null);
+
     if (!title.trim()) {
       setError(t("title_required"));
       return;
     }
+
     try {
-      await createMutation.mutateAsync({ title: title.trim(), pattern: source, bpm });
-      setTitle("");
+      const body = {
+        title: title.trim(),
+        pattern: source,
+        bpm,
+        tags: parseTags(),
+      };
+
+      if (editing) {
+        await updateMutation.mutateAsync({ id: editing.id, body });
+      } else {
+        await createMutation.mutateAsync(body);
+      }
+
+      resetForm();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed.");
     }
   };
 
+  const startEdit = (c: Composition) => {
+    setError(null);
+    setEditing(c);
+    setTitle(c.title);
+    setTagsText(c.tags.join(", "));
+    onLoad(c.pattern, c.bpm);
+  };
+
   const remove = (id: number) => {
-    // fire-and-forget, same as before — the list stays in sync via the
-    // mutation's own cache invalidation, no explicit refresh needed
     deleteMutation.mutate(id);
   };
 
@@ -71,6 +103,7 @@ export function CompositionBar({
 
   const copyLink = async (c: Composition) => {
     if (!c.slug) return;
+
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/c/${c.slug}`);
       setCopiedId(c.id);
@@ -93,12 +126,29 @@ export function CompositionBar({
         />
         <button
           onClick={save}
-          disabled={createMutation.isPending}
+          disabled={createMutation.isPending || updateMutation.isPending}
           className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
-          {t("save")}
+          {editing ? "Update" : t("save")}
         </button>
       </div>
+
+      <input
+        value={tagsText}
+        onChange={(e) => setTagsText(e.target.value)}
+        placeholder="Tags, separated by commas"
+        className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+      />
+
+      {editing && (
+        <button
+          type="button"
+          onClick={resetForm}
+          className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+        >
+          Cancel edit
+        </button>
+      )}
 
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
 
@@ -113,12 +163,19 @@ export function CompositionBar({
                     · {c.bpm} {t("bpm")}
                   </span>
                 </span>
+
                 <span className="flex shrink-0 gap-3 text-xs">
                   <button
                     onClick={() => onLoad(c.pattern, c.bpm)}
                     className="font-medium text-primary hover:underline"
                   >
                     {t("load")}
+                  </button>
+                  <button
+                    onClick={() => startEdit(c)}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Edit
                   </button>
                   <button
                     onClick={() => togglePublish(c)}
@@ -134,6 +191,19 @@ export function CompositionBar({
                   </button>
                 </span>
               </div>
+
+              {c.tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {c.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-border px-2 py-1 text-xs text-muted-foreground"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {c.isPublic && c.slug && (
                 <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
