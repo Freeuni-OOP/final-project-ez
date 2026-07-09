@@ -3,9 +3,11 @@ package com.algorythm.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.algorythm.model.Composition;
+import com.algorythm.model.Tag;
 import com.algorythm.model.User;
 import com.algorythm.support.AbstractIntegrationTest;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,7 @@ class CompositionRepositoryTest extends AbstractIntegrationTest {
 
     @Autowired private CompositionRepository compositions;
     @Autowired private UserRepository users;
+    @Autowired private TagRepository tags;
 
     private User alice;
     private User bob;
@@ -181,5 +184,103 @@ class CompositionRepositoryTest extends AbstractIntegrationTest {
                         List.of(alice.getId(), bob.getId()), PageRequest.of(0, 10));
 
         assertThat(result).extracting(Composition::getTitle).containsExactly("Alice public");
+    }
+
+    // --- findByIsPublicTrueAndTagName (explore feed, filtered by tag) ------
+
+    @Test
+    void findByIsPublicTrueAndTagName_returnsOnlyPublicCompositionsCarryingThatTag() {
+        Tag lofi = tags.save(new Tag("lofi"));
+        Tag chill = tags.save(new Tag("chill"));
+
+        Composition tagged = publish(alice, "Lofi jam", "lofijam1");
+        tagged.setTags(Set.of(lofi));
+        compositions.save(tagged);
+
+        Composition otherTag = publish(alice, "Chill jam", "chilljam1");
+        otherTag.setTags(Set.of(chill));
+        compositions.save(otherTag);
+
+        Composition privateButTagged = new Composition(alice, "Draft", "pattern", 100);
+        privateButTagged.setTags(Set.of(lofi));
+        compositions.save(privateButTagged);
+
+        List<Composition> result =
+                compositions.findByIsPublicTrueAndTagName("lofi", PageRequest.of(0, 10));
+
+        assertThat(result).extracting(Composition::getTitle).containsExactly("Lofi jam");
+    }
+
+    // --- searchPublicByTitleOrTag --------------------------------------------
+
+    @Test
+    void searchPublicByTitleOrTag_matchesByTitleCaseInsensitively() {
+        publish(alice, "Midnight Drive", "search1");
+        publish(alice, "Morning Walk", "search2");
+
+        List<Composition> result =
+                compositions.searchPublicByTitleOrTag("midnight", PageRequest.of(0, 10));
+
+        assertThat(result).extracting(Composition::getTitle).containsExactly("Midnight Drive");
+    }
+
+    @Test
+    void searchPublicByTitleOrTag_alsoMatchesByTagName() {
+        Tag lofi = tags.save(new Tag("lofi"));
+        Composition tagged = publish(alice, "Untitled", "search3");
+        tagged.setTags(Set.of(lofi));
+        compositions.save(tagged);
+
+        List<Composition> result =
+                compositions.searchPublicByTitleOrTag("lofi", PageRequest.of(0, 10));
+
+        assertThat(result).extracting(Composition::getTitle).containsExactly("Untitled");
+    }
+
+    @Test
+    void searchPublicByTitleOrTag_excludesPrivateCompositions() {
+        compositions.save(new Composition(alice, "Midnight Drive", "pattern", 100));
+
+        assertThat(compositions.searchPublicByTitleOrTag("midnight", PageRequest.of(0, 10)))
+                .isEmpty();
+    }
+
+    @Test
+    void searchPublicByTitleOrTag_returnsEachMatchOnceEvenWithSeveralMatchingTags() {
+        Tag lofi = tags.save(new Tag("lofi"));
+        Tag lofiBeats = tags.save(new Tag("lofi-beats"));
+        Composition tagged = publish(alice, "Untitled", "search4");
+        tagged.setTags(Set.of(lofi, lofiBeats));
+        compositions.save(tagged);
+
+        List<Composition> result =
+                compositions.searchPublicByTitleOrTag("lofi", PageRequest.of(0, 10));
+
+        assertThat(result).hasSize(1);
+    }
+
+    // --- findDistinctTagNamesForPublicCompositions --------------------------
+
+    @Test
+    void findDistinctTagNamesForPublicCompositions_onlyListsTagsUsedByPublishedWork() {
+        Tag lofi = tags.save(new Tag("lofi"));
+        Tag draftOnly = tags.save(new Tag("draft-only"));
+
+        Composition published = publish(alice, "Song", "tagnames1");
+        published.setTags(Set.of(lofi));
+        compositions.save(published);
+
+        Composition draft = new Composition(alice, "Draft", "pattern", 100);
+        draft.setTags(Set.of(draftOnly));
+        compositions.save(draft);
+
+        assertThat(compositions.findDistinctTagNamesForPublicCompositions()).containsExactly("lofi");
+    }
+
+    private Composition publish(User owner, String title, String slug) {
+        Composition composition = new Composition(owner, title, "pattern", 100);
+        composition.setSlug(slug);
+        composition.setPublic(true);
+        return compositions.save(composition);
     }
 }

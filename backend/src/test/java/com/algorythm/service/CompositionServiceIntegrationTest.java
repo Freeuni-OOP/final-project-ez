@@ -6,8 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.algorythm.dto.CompositionRequest;
 import com.algorythm.dto.CompositionResponse;
 import com.algorythm.model.User;
+import com.algorythm.repository.TagRepository;
 import com.algorythm.repository.UserRepository;
 import com.algorythm.support.AbstractIntegrationTest;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired private CompositionService compositionService;
     @Autowired private UserRepository userRepository;
+    @Autowired private TagRepository tagRepository;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +42,7 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
     void fullCrudAndPublishFlow_worksForTheOwner() {
         CompositionResponse created =
                 compositionService.create(
-                        "alice", new CompositionRequest("Song A", "C4 E4 G4", 120));
+                        "alice", new CompositionRequest("Song A", "C4 E4 G4", 120, List.of()));
         assertThat(created.id()).isNotNull();
         assertThat(created.isPublic()).isFalse();
         assertThat(created.slug()).isNull();
@@ -49,7 +52,7 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
 
         CompositionResponse updated =
                 compositionService.update(
-                        "alice", created.id(), new CompositionRequest("Song A v2", "C4 E4 G4 C5", 130));
+                        "alice", created.id(), new CompositionRequest("Song A v2", "C4 E4 G4 C5", 130, List.of()));
         assertThat(updated.title()).isEqualTo("Song A v2");
         assertThat(updated.bpm()).isEqualTo(130);
 
@@ -69,7 +72,7 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     void publish_reusesTheSameShareSlugAcrossPublishUnpublishCycles() {
         CompositionResponse created =
-                compositionService.create("alice", new CompositionRequest("Song", "pattern", 100));
+                compositionService.create("alice", new CompositionRequest("Song", "pattern", 100, List.of()));
 
         String firstSlug = compositionService.publish("alice", created.id()).slug();
         compositionService.unpublish("alice", created.id());
@@ -80,18 +83,65 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void list_isScopedToTheCurrentUser() {
-        compositionService.create("alice", new CompositionRequest("Alice 1", "pattern", 100));
-        compositionService.create("alice", new CompositionRequest("Alice 2", "pattern", 100));
-        compositionService.create("bob", new CompositionRequest("Bob 1", "pattern", 100));
+        compositionService.create("alice", new CompositionRequest("Alice 1", "pattern", 100, List.of()));
+        compositionService.create("alice", new CompositionRequest("Alice 2", "pattern", 100, List.of()));
+        compositionService.create("bob", new CompositionRequest("Bob 1", "pattern", 100, List.of()));
 
         assertThat(compositionService.list("alice")).hasSize(2);
         assertThat(compositionService.list("bob")).hasSize(1);
     }
 
     @Test
+    void create_persistsAndNormalizesTags() {
+        CompositionResponse created =
+                compositionService.create(
+                        "alice", new CompositionRequest("Song", "pattern", 100, List.of("  Lofi  ", "Chill")));
+
+        assertThat(created.tags()).containsExactly("chill", "lofi");
+    }
+
+    @Test
+    void create_sharesOneTagRowAcrossCompositionsWithTheSameTagName() {
+        compositionService.create("alice", new CompositionRequest("Song A", "pattern", 100, List.of("lofi")));
+        compositionService.create("bob", new CompositionRequest("Song B", "pattern", 100, List.of("LOFI")));
+
+        assertThat(tagRepository.findAll()).extracting(com.algorythm.model.Tag::getName)
+                .containsExactly("lofi");
+    }
+
+    @Test
+    void update_replacesTheTagSet() {
+        CompositionResponse created =
+                compositionService.create(
+                        "alice", new CompositionRequest("Song", "pattern", 100, List.of("chill")));
+
+        CompositionResponse updated =
+                compositionService.update(
+                        "alice",
+                        created.id(),
+                        new CompositionRequest("Song", "pattern", 100, List.of("energetic")));
+
+        assertThat(updated.tags()).containsExactly("energetic");
+    }
+
+    @Test
+    void create_rejectsMoreThanFiveTags() {
+        ResponseStatusException ex =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> compositionService.create(
+                                "alice",
+                                new CompositionRequest(
+                                        "Song", "pattern", 100,
+                                        List.of("a", "b", "c", "d", "e", "f"))));
+
+        assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void anotherUserCannotReadSomeoneElsesComposition() {
         CompositionResponse alicesComposition =
-                compositionService.create("alice", new CompositionRequest("Private", "pattern", 100));
+                compositionService.create("alice", new CompositionRequest("Private", "pattern", 100, List.of()));
 
         ResponseStatusException ex =
                 assertThrows(
@@ -105,7 +155,7 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
     void anotherUserCannotUpdateSomeoneElsesComposition() {
         CompositionResponse alicesComposition =
                 compositionService.create(
-                        "alice", new CompositionRequest("Original", "pattern", 100));
+                        "alice", new CompositionRequest("Original", "pattern", 100, List.of()));
 
         ResponseStatusException ex =
                 assertThrows(
@@ -114,7 +164,7 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
                                 compositionService.update(
                                         "bob",
                                         alicesComposition.id(),
-                                        new CompositionRequest("Hijacked", "evil pattern", 200)));
+                                        new CompositionRequest("Hijacked", "evil pattern", 200, List.of())));
 
         assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         // confirm the failed attempt had no side effect on alice's data
@@ -125,7 +175,7 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     void anotherUserCannotDeleteSomeoneElsesComposition() {
         CompositionResponse alicesComposition =
-                compositionService.create("alice", new CompositionRequest("Keep me", "pattern", 100));
+                compositionService.create("alice", new CompositionRequest("Keep me", "pattern", 100, List.of()));
 
         ResponseStatusException ex =
                 assertThrows(
@@ -140,7 +190,7 @@ class CompositionServiceIntegrationTest extends AbstractIntegrationTest {
     @Test
     void anotherUserCannotPublishOrUnpublishSomeoneElsesComposition() {
         CompositionResponse alicesComposition =
-                compositionService.create("alice", new CompositionRequest("Song", "pattern", 100));
+                compositionService.create("alice", new CompositionRequest("Song", "pattern", 100, List.of()));
 
         ResponseStatusException publishEx =
                 assertThrows(

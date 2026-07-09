@@ -7,16 +7,21 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * A saved composition (the pattern text + tempo) owned by a user.
  * Maps to the "compositions" table (see V3/V4 migrations). A composition can be
- * published (is_public) and shared via a short unique slug.
+ * published (is_public) and shared via a short unique slug, and can carry
+ * several tags (see V8 migration) set by its creator.
  */
 @Entity
 @Table(name = "compositions")
@@ -51,6 +56,13 @@ public class Composition {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "composition_tags",
+            joinColumns = @JoinColumn(name = "composition_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new LinkedHashSet<>();
 
     protected Composition() {
         // required by JPA
@@ -131,5 +143,14 @@ public class Composition {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
+    /** Copies into a mutable set - Hibernate manages/clears this collection internally. */
+    public void setTags(Set<Tag> tags) {
+        this.tags = new LinkedHashSet<>(tags);
     }
 }

@@ -1,6 +1,8 @@
 package com.algorythm.service;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
+
 
 import com.algorythm.dto.PublicCompositionResponse;
 import com.algorythm.model.Composition;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+
 /**
  * End-to-end coverage of the following feed against a real Postgres, running
  * through the real FeedService + repositories - nothing mocked. Proves: only
@@ -24,14 +27,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class FeedServiceIntegrationTest extends AbstractIntegrationTest {
 
+
     @Autowired private FeedService feedService;
     @Autowired private FollowService followService;
     @Autowired private UserRepository userRepository;
     @Autowired private CompositionRepository compositionRepository;
 
+
     private User alice;
     private User bob;
     private User carol;
+
 
     @BeforeEach
     void setUp() {
@@ -40,31 +46,39 @@ class FeedServiceIntegrationTest extends AbstractIntegrationTest {
         carol = userRepository.save(new User("carol", "carol@example.com", "hashed-pw"));
     }
 
+
     @Test
     void following_returnsOnlyPublicWorkFromFollowedUsers_newestFirst() {
         followService.follow("alice", "bob");
+
 
         Composition bobOlder = publish(bob, "Bob older", "feedslugold");
         Composition bobNewer = publish(bob, "Bob newer", "feedslugnew");
         compositionRepository.save(new Composition(bob, "Bob private draft", "pattern", 100));
         publish(carol, "Carol public (not followed)", "feedslugcarol");
 
+
         // touch "bobOlder" last so it's the most recently updated
         bobOlder.setTitle("Bob older, edited");
         compositionRepository.saveAndFlush(bobOlder);
 
+
         List<PublicCompositionResponse> result = feedService.following("alice", 0, 20);
+
 
         assertThat(result).extracting(PublicCompositionResponse::slug)
                 .containsExactly("feedslugold", "feedslugnew");
     }
 
+
     @Test
     void following_isEmptyWhenTheViewerFollowsNobody() {
         publish(bob, "Bob public", "feedslugalone");
 
+
         assertThat(feedService.following("alice", 0, 20)).isEmpty();
     }
+
 
     @Test
     void following_respectsPageAndSizeParameters() {
@@ -77,13 +91,16 @@ class FeedServiceIntegrationTest extends AbstractIntegrationTest {
         third.setTitle("Third, edited");
         compositionRepository.saveAndFlush(third);
 
+
         List<PublicCompositionResponse> firstPage = feedService.following("alice", 0, 2);
         assertThat(firstPage).extracting(PublicCompositionResponse::slug)
                 .containsExactly("feedp3", "feedp2");
 
+
         List<PublicCompositionResponse> secondPage = feedService.following("alice", 1, 2);
         assertThat(secondPage).extracting(PublicCompositionResponse::slug).containsExactly("feedp1");
     }
+
 
     @Test
     void following_stopsIncludingSomeoneOnceUnfollowed() {
@@ -91,10 +108,13 @@ class FeedServiceIntegrationTest extends AbstractIntegrationTest {
         publish(bob, "Bob public", "feedunfollow1");
         assertThat(feedService.following("alice", 0, 20)).hasSize(1);
 
+
         followService.unfollow("alice", "bob");
+
 
         assertThat(feedService.following("alice", 0, 20)).isEmpty();
     }
+
 
     private Composition publish(User owner, String title, String slug) {
         Composition composition = new Composition(owner, title, "pattern", 100);
@@ -103,3 +123,6 @@ class FeedServiceIntegrationTest extends AbstractIntegrationTest {
         return compositionRepository.save(composition);
     }
 }
+
+
+
