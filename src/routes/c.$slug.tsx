@@ -60,9 +60,7 @@ function PublicComposition_() {
           <p className="text-sm text-muted-foreground">…</p>
         ) : (
           <>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {comp.title}
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{comp.title}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {t("by")}{" "}
               <Link
@@ -92,10 +90,7 @@ function PublicComposition_() {
         )}
 
         <div className="mt-8">
-          <Link
-            to="/explore"
-            className="text-sm font-medium text-primary hover:underline"
-          >
+          <Link to="/explore" className="text-sm font-medium text-primary hover:underline">
             ← {t("explore_title")}
           </Link>
         </div>

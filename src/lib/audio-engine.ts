@@ -25,13 +25,7 @@ export abstract class Instrument {
    * @param freq  pitch in Hz (ignored by drums)
    * @param dur   note length in seconds
    */
-  abstract play(
-    ctx: AudioContext,
-    out: AudioNode,
-    when: number,
-    freq: number,
-    dur: number,
-  ): void;
+  abstract play(ctx: AudioContext, out: AudioNode, when: number, freq: number, dur: number): void;
 }
 
 class Kick extends Instrument {
@@ -452,7 +446,10 @@ export class Parser {
     const colon = line.indexOf(":");
     if (colon === -1) throw new Error(`Missing ':' in "${line}"`);
     const kind = line.slice(0, colon).trim().toLowerCase();
-    const tokens = line.slice(colon + 1).trim().split(/\s+/);
+    const tokens = line
+      .slice(colon + 1)
+      .trim()
+      .split(/\s+/);
 
     const isDrum = kind === "drum";
     const pitched = PITCHED[kind];
@@ -640,8 +637,7 @@ export class AudioEngine {
 
     const Ctx =
       window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     this.ctx = new Ctx();
 
     this.master = this.ctx.createGain();

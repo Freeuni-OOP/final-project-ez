@@ -90,10 +90,7 @@ export function registerUser(body: {
   return apiFetch<AuthUser>("/api/auth/register", { method: "POST", body });
 }
 
-export function loginUser(body: {
-  username: string;
-  password: string;
-}): Promise<AuthResult> {
+export function loginUser(body: { username: string; password: string }): Promise<AuthResult> {
   return apiFetch<AuthResult>("/api/auth/login", { method: "POST", body });
 }
 
@@ -130,10 +127,7 @@ export function createComposition(body: CompositionInput): Promise<Composition> 
   return apiFetch<Composition>("/api/compositions", { method: "POST", body });
 }
 
-export function updateComposition(
-  id: number,
-  body: CompositionInput,
-): Promise<Composition> {
+export function updateComposition(id: number, body: CompositionInput): Promise<Composition> {
   return apiFetch<Composition>(`/api/compositions/${id}`, { method: "PUT", body });
 }
 
@@ -162,13 +156,8 @@ export interface PublicComposition {
 }
 
 /** The explore feed: public compositions, newest first. */
-export function listPublicCompositions(
-  page = 0,
-  size = 20,
-): Promise<PublicComposition[]> {
-  return apiFetch<PublicComposition[]>(
-    `/api/public/compositions?page=${page}&size=${size}`,
-  );
+export function listPublicCompositions(page = 0, size = 20): Promise<PublicComposition[]> {
+  return apiFetch<PublicComposition[]>(`/api/public/compositions?page=${page}&size=${size}`);
 }
 
 export function getPublicComposition(slug: string): Promise<PublicComposition> {
@@ -188,8 +177,6 @@ export function getUserProfile(username: string): Promise<UserProfile> {
   return apiFetch<UserProfile>(`/api/public/users/${username}`);
 }
 
-
-
 // --- Follows + feed (auth) ----------------------------------------
 
 /** Follow a user. No-op on the server if already following. */
@@ -204,7 +191,5 @@ export function unfollowUser(username: string): Promise<void> {
 
 /** Public compositions by people the current user follows, newest first. */
 export function getFollowingFeed(page = 0, size = 20): Promise<PublicComposition[]> {
-  return apiFetch<PublicComposition[]>(
-    `/api/feed/following?page=${page}&size=${size}`,
-  );
+  return apiFetch<PublicComposition[]>(`/api/feed/following?page=${page}&size=${size}`);
 }
