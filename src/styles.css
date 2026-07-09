@@ -125,11 +125,37 @@
 }
 
 @keyframes pixel-fizz {
-  0%, 100% { text-shadow: 1px 0 0 currentColor, -1px 0 0 rgba(255,255,255,0.4); transform: translate(0,0); }
-  20% { text-shadow: 2px 0 0 rgba(180,120,255,0.7), -1px 1px 0 rgba(255,255,255,0.3); transform: translate(0.5px,-0.5px); }
-  40% { text-shadow: -1px 0 0 rgba(140,90,255,0.6), 1px -1px 0 rgba(255,255,255,0.4); transform: translate(-0.5px,0.5px); }
-  60% { text-shadow: 1px 1px 0 rgba(200,150,255,0.5), -2px 0 0 rgba(255,255,255,0.3); transform: translate(0.5px,0.5px); }
-  80% { text-shadow: -1px -1px 0 rgba(160,100,255,0.6), 1px 0 0 rgba(255,255,255,0.4); transform: translate(-0.5px,-0.5px); }
+  0%,
+  100% {
+    text-shadow:
+      1px 0 0 currentColor,
+      -1px 0 0 rgba(255, 255, 255, 0.4);
+    transform: translate(0, 0);
+  }
+  20% {
+    text-shadow:
+      2px 0 0 rgba(180, 120, 255, 0.7),
+      -1px 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translate(0.5px, -0.5px);
+  }
+  40% {
+    text-shadow:
+      -1px 0 0 rgba(140, 90, 255, 0.6),
+      1px -1px 0 rgba(255, 255, 255, 0.4);
+    transform: translate(-0.5px, 0.5px);
+  }
+  60% {
+    text-shadow:
+      1px 1px 0 rgba(200, 150, 255, 0.5),
+      -2px 0 0 rgba(255, 255, 255, 0.3);
+    transform: translate(0.5px, 0.5px);
+  }
+  80% {
+    text-shadow:
+      -1px -1px 0 rgba(160, 100, 255, 0.6),
+      1px 0 0 rgba(255, 255, 255, 0.4);
+    transform: translate(-0.5px, -0.5px);
+  }
 }
 
 .pixel-fizz {
@@ -137,8 +163,13 @@
 }
 
 @keyframes music-wave {
-  0%, 100% { transform: translateY(0) skewX(-10deg) translateY(0); }
-  50% { transform: translateY(-0.15em) skewX(-10deg) translateY(0); }
+  0%,
+  100% {
+    transform: translateY(0) skewX(-10deg) translateY(0);
+  }
+  50% {
+    transform: translateY(-0.15em) skewX(-10deg) translateY(0);
+  }
 }
 
 .music-wave > span {

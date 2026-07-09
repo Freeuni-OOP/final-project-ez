@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 
-import { type PublicComposition, listPublicCompositions } from "@/lib/api";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
+import { usePublicCompositions } from "@/lib/queries";
 
 export const Route = createFileRoute("/explore")({
   head: () => ({
@@ -20,15 +19,8 @@ export const Route = createFileRoute("/explore")({
 
 function Explore() {
   const { t } = useI18n();
-  const [items, setItems] = useState<PublicComposition[]>([]);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    listPublicCompositions()
-      .then(setItems)
-      .catch(() => setItems([]))
-      .finally(() => setLoaded(true));
-  }, []);
+  const { data, isPending } = usePublicCompositions();
+  const items = data ?? [];
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -36,7 +28,7 @@ function Explore() {
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("explore_title")}</h1>
         <p className="mt-2 text-sm text-muted-foreground sm:text-base">{t("explore_sub")}</p>
 
-        {loaded && items.length === 0 ? (
+        {!isPending && items.length === 0 ? (
           <p className="mt-8 text-sm text-muted-foreground">{t("empty_explore")}</p>
         ) : (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

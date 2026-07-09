@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 
-import { type PublicComposition, getFollowingFeed } from "@/lib/api";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
+import { useFollowingFeed } from "@/lib/queries";
 
 export const Route = createFileRoute("/feed")({
   head: () => ({
@@ -22,17 +21,8 @@ export const Route = createFileRoute("/feed")({
 function Feed() {
   const { t } = useI18n();
   const { user, loading } = useAuth();
-  const [items, setItems] = useState<PublicComposition[]>([]);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    setLoaded(false);
-    getFollowingFeed()
-      .then(setItems)
-      .catch(() => setItems([]))
-      .finally(() => setLoaded(true));
-  }, [user]);
+  const { data, isPending } = useFollowingFeed(user?.username);
+  const items = data ?? [];
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -44,7 +34,7 @@ function Feed() {
           <p className="mt-8 text-sm text-muted-foreground">…</p>
         ) : !user ? (
           <p className="mt-8 text-sm text-muted-foreground">{t("login_to_feed")}</p>
-        ) : loaded && items.length === 0 ? (
+        ) : !isPending && items.length === 0 ? (
           <p className="mt-8 text-sm text-muted-foreground">{t("empty_feed")}</p>
         ) : (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

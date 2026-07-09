@@ -4,26 +4,32 @@ Spring Boot 3 (Java 21) backend for AlgoRythm. This is the scaffold — just the
 a health endpoint. Database, auth, and features are added in later issues.
 
 ## Requirements
+
 - JDK 21
 - Maven 3.9+ (or use your IDE's bundled Maven)
 
 ## Run locally
+
 ```bash
 cd backend
 mvn spring-boot:run
 ```
+
 The app starts on http://localhost:8080. Check it's alive:
+
 ```bash
 curl http://localhost:8080/api/health
 # {"status":"ok","service":"algorythm-backend","time":"..."}
 ```
 
 ## Build / test
+
 ```bash
 mvn clean verify
 ```
 
 ## Layout
+
 ```
 src/main/java/com/algorythm/
   AlgorythmApplication.java   # entry point

@@ -2,18 +2,17 @@
 // the current pattern + BPM under a title, lists the user's saved compositions,
 // loads or deletes them, and publishes/unpublishes (with a copyable share link).
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import {
-  type Composition,
-  createComposition,
-  deleteComposition,
-  listCompositions,
-  publishComposition,
-  unpublishComposition,
-} from "@/lib/api";
+import { type Composition } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
+import {
+  useCreateComposition,
+  useDeleteComposition,
+  useMyCompositions,
+  useTogglePublish,
+} from "@/lib/queries";
 
 export function CompositionBar({
   source,
@@ -27,23 +26,14 @@ export function CompositionBar({
   const { user } = useAuth();
   const { t } = useI18n();
 
-  const [items, setItems] = useState<Composition[]>([]);
+  const { data: items = [] } = useMyCompositions(user?.username);
+  const createMutation = useCreateComposition();
+  const deleteMutation = useDeleteComposition();
+  const toggleMutation = useTogglePublish();
+
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
-
-  const refresh = () => {
-    listCompositions()
-      .then(setItems)
-      .catch(() => setItems([]));
-  };
-
-  // Load the list when the user signs in; clear it when they sign out.
-  useEffect(() => {
-    if (user) refresh();
-    else setItems([]);
-  }, [user]);
 
   if (!user) {
     return (
@@ -59,35 +49,24 @@ export function CompositionBar({
       setError(t("title_required"));
       return;
     }
-    setBusy(true);
     try {
-      await createComposition({ title: title.trim(), pattern: source, bpm });
+      await createMutation.mutateAsync({ title: title.trim(), pattern: source, bpm });
       setTitle("");
-      refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed.");
-    } finally {
-      setBusy(false);
     }
   };
 
-  const remove = async (id: number) => {
-    try {
-      await deleteComposition(id);
-      refresh();
-    } catch {
-      // ignore — the list refreshes on the next action
-    }
+  const remove = (id: number) => {
+    // fire-and-forget, same as before — the list stays in sync via the
+    // mutation's own cache invalidation, no explicit refresh needed
+    deleteMutation.mutate(id);
   };
 
-  const togglePublish = async (c: Composition) => {
-    try {
-      if (c.isPublic) await unpublishComposition(c.id);
-      else await publishComposition(c.id);
-      refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not update.");
-    }
+  const togglePublish = (c: Composition) => {
+    toggleMutation.mutate(c, {
+      onError: (e) => setError(e instanceof Error ? e.message : "Could not update."),
+    });
   };
 
   const copyLink = async (c: Composition) => {
@@ -114,7 +93,7 @@ export function CompositionBar({
         />
         <button
           onClick={save}
-          disabled={busy}
+          disabled={createMutation.isPending}
           className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
           {t("save")}

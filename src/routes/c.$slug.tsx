@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
-import { type PublicComposition, getPublicComposition } from "@/lib/api";
 import { AudioEngine } from "@/lib/audio-engine";
 import { SoundVisualizer } from "@/components/sound-visualizer";
 import { useI18n } from "@/lib/i18n";
+import { usePublicComposition } from "@/lib/queries";
 
 export const Route = createFileRoute("/c/$slug")({
   component: PublicComposition_,
@@ -14,23 +14,15 @@ function PublicComposition_() {
   const { slug } = Route.useParams();
   const { t } = useI18n();
 
-  const [comp, setComp] = useState<PublicComposition | null>(null);
-  const [error, setError] = useState(false);
+  const { data: comp, isError } = usePublicComposition(slug);
   const [playing, setPlaying] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const engineRef = useRef<AudioEngine | null>(null);
 
+  // Stop any playback from the previous composition when navigating to a
+  // different slug (or away from this page entirely).
   useEffect(() => {
-    let active = true;
-    getPublicComposition(slug)
-      .then((c) => {
-        if (active) setComp(c);
-      })
-      .catch(() => {
-        if (active) setError(true);
-      });
     return () => {
-      active = false;
       engineRef.current?.stop();
     };
   }, [slug]);
@@ -54,7 +46,7 @@ function PublicComposition_() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="mx-auto max-w-3xl px-6 py-12">
-        {error ? (
+        {isError ? (
           <p className="text-sm text-muted-foreground">{t("not_found")}</p>
         ) : !comp ? (
           <p className="text-sm text-muted-foreground">…</p>
