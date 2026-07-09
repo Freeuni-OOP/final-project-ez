@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.algorythm.model.NotificationType;
 /**
  * Comments on compositions: public reads by slug, authenticated posting, and
  * author-only deletion.
@@ -24,13 +24,16 @@ public class CommentService {
     private final CommentRepository comments;
     private final CompositionRepository compositions;
     private final UserRepository users;
+    private final NotificationService notifications;
 
     public CommentService(CommentRepository comments,
                           CompositionRepository compositions,
-                          UserRepository users) {
+                          UserRepository users,
+                          NotificationService notifications) {
         this.comments = comments;
         this.compositions = compositions;
         this.users = users;
+        this.notifications = notifications;
     }
 
     /** Comments on a public composition, oldest first. No auth required. */
@@ -50,6 +53,15 @@ public class CommentService {
         User author = currentUser(username);
         Composition composition = publicComposition(compositionId);
         Comment saved = comments.save(new Comment(composition, author, request.body()));
+
+        notifications.notify(
+                composition.getOwner(),
+                author,
+                NotificationType.COMMENT,
+                composition,
+                saved.getId()
+        );
+
         return CommentResponse.from(saved);
     }
 

@@ -1,0 +1,19 @@
+package com.algorythm.repository;
+
+import com.algorythm.model.Notification;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
+
+    List<Notification> findByRecipientUsernameOrderByCreatedAtDesc(
+            String username,
+            Pageable pageable
+    );
+
+    long countByRecipientUsernameAndReadFalse(String username);
+
+    Optional<Notification> findByIdAndRecipientUsername(Long id, String username);
+}

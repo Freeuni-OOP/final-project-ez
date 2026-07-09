@@ -17,7 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.algorythm.model.NotificationType;
 /**
  * Likes on compositions. Handles like/unlike (idempotent) and enriches public
  * composition responses with the like count and whether the viewer liked them.
@@ -28,13 +28,16 @@ public class LikeService {
     private final CompositionLikeRepository likes;
     private final CompositionRepository compositions;
     private final UserRepository users;
+    private final NotificationService notifications;
 
     public LikeService(CompositionLikeRepository likes,
                        CompositionRepository compositions,
-                       UserRepository users) {
+                       UserRepository users,
+                       NotificationService notifications) {
         this.likes = likes;
         this.compositions = compositions;
         this.users = users;
+        this.notifications = notifications;
     }
 
     /** Like a public composition. Liking again is a no-op. */
@@ -45,6 +48,13 @@ public class LikeService {
         CompositionLikeId id = new CompositionLikeId(user.getId(), composition.getId());
         if (!likes.existsById(id)) {
             likes.save(new CompositionLike(user.getId(), composition.getId()));
+            notifications.notify(
+                    composition.getOwner(),
+                    user,
+                    NotificationType.LIKE,
+                    composition,
+                    null
+            );
         }
     }
 
