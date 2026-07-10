@@ -64,8 +64,8 @@ function Explore() {
             onKeyDown={(e) => {
               if (e.key === "Enter") applySearch();
             }}
-            aria-label="Search compositions"
-            placeholder="Search compositions..."
+            aria-label={t("explore_search_placeholder")}
+            placeholder={t("explore_search_placeholder")}
             className="min-h-10 flex-1 rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
           <button
@@ -73,7 +73,7 @@ function Explore() {
             onClick={applySearch}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
-            Search
+            {t("explore_search")}
           </button>
           {(selectedTag || query) && (
             <button
@@ -81,21 +81,22 @@ function Explore() {
               onClick={clearFilters}
               className="rounded-md border border-border px-4 py-2 text-sm"
             >
-              Clear
+              {t("explore_clear")}
             </button>
           )}
         </div>
 
         {selectedTag && (
           <p className="mt-4 text-sm text-muted-foreground">
-            Filtering by tag: <span className="font-medium text-foreground">#{selectedTag}</span>
+            {t("explore_filtering_by")}{" "}
+            <span className="font-medium text-foreground">#{selectedTag}</span>
           </p>
         )}
 
         {isPending ? (
-          <LoadingState message="Loading compositions..." className="mt-8" />
+          <LoadingState message={t("explore_loading")} className="mt-8" />
         ) : items.length === 0 ? (
-          <EmptyState message="No compositions found." className="mt-8" />
+          <EmptyState message={t("explore_none")} className="mt-8" />
         ) : (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((c) => (

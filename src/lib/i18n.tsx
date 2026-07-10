@@ -60,6 +60,14 @@ const strings = {
   empty_explore: "No public compositions yet — publish one to get started.",
   not_found: "This isn't available.",
 
+  // Explore search/filter
+  explore_search_placeholder: "Search compositions…",
+  explore_search: "Search",
+  explore_clear: "Clear",
+  explore_filtering_by: "Filtering by tag:",
+  explore_loading: "Loading compositions…",
+  explore_none: "No compositions found.",
+
   // Wired-up UIs
   like: "Like",
   unlike: "Unlike",
