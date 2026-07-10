@@ -73,6 +73,7 @@ export interface AuthUser {
   id: number;
   username: string;
   email: string;
+  role: string;
   createdAt: string;
 }
 
@@ -111,6 +112,8 @@ export interface Composition {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  likeCount: number;
+  likedByMe: boolean;
 }
 
 export interface CompositionInput {
@@ -157,6 +160,7 @@ export function remixComposition(slug: string): Promise<Composition> {
 // --- Public compositions + profiles (no auth needed) --------------
 
 export interface PublicComposition {
+  id: number;
   slug: string;
   title: string;
   pattern: string;
@@ -251,4 +255,94 @@ export function markNotificationRead(id: number): Promise<void> {
   return apiFetch<void>(`/api/notifications/${id}/read`, {
     method: "POST",
   });
+}
+
+// --- Likes (auth) -------------------------------------------------
+
+export function likeComposition(id: number): Promise<void> {
+  return apiFetch<void>(`/api/compositions/${id}/like`, { method: "POST" });
+}
+export function unlikeComposition(id: number): Promise<void> {
+  return apiFetch<void>(`/api/compositions/${id}/like`, { method: "DELETE" });
+}
+
+// --- Comments -----------------------------------------------------
+
+export interface Comment {
+  id: number;
+  author: string;
+  body: string;
+  createdAt: string;
+}
+export function listComments(slug: string): Promise<Comment[]> {
+  return apiFetch<Comment[]>(`/api/public/compositions/${slug}/comments`);
+}
+export function postComment(compositionId: number, body: string): Promise<Comment> {
+  return apiFetch<Comment>(`/api/compositions/${compositionId}/comments`, {
+    method: "POST",
+    body: { body },
+  });
+}
+export function deleteComment(id: number): Promise<void> {
+  return apiFetch<void>(`/api/comments/${id}`, { method: "DELETE" });
+}
+
+// --- Reporting (auth) ---------------------------------------------
+
+export function reportComposition(id: number, reason?: string): Promise<void> {
+  return apiFetch<void>(`/api/compositions/${id}/report`, { method: "POST", body: { reason } });
+}
+export function reportComment(id: number, reason?: string): Promise<void> {
+  return apiFetch<void>(`/api/comments/${id}/report`, { method: "POST", body: { reason } });
+}
+
+// --- Admin / moderation (admin only) ------------------------------
+
+export interface Report {
+  id: number;
+  targetType: "COMPOSITION" | "COMMENT";
+  targetId: number;
+  targetLabel: string;
+  reporter: string;
+  reason: string | null;
+  status: string;
+  createdAt: string;
+}
+export interface SiteStats {
+  userCount: number;
+  compositionCount: number;
+  openReportCount: number;
+}
+export function getAdminReports(): Promise<Report[]> {
+  return apiFetch<Report[]>("/api/admin/reports");
+}
+export function adminRemoveComposition(id: number): Promise<void> {
+  return apiFetch<void>(`/api/admin/compositions/${id}`, { method: "DELETE" });
+}
+export function adminRemoveComment(id: number): Promise<void> {
+  return apiFetch<void>(`/api/admin/comments/${id}`, { method: "DELETE" });
+}
+export function dismissReport(id: number): Promise<void> {
+  return apiFetch<void>(`/api/admin/reports/${id}/dismiss`, { method: "POST" });
+}
+export function getSiteStats(): Promise<SiteStats> {
+  return apiFetch<SiteStats>("/api/admin/stats");
+}
+
+// --- Account (auth) -----------------------------------------------
+
+export function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  return apiFetch<void>("/api/account/password", {
+    method: "PUT",
+    body: { currentPassword, newPassword },
+  });
+}
+export function changeEmail(currentPassword: string, email: string): Promise<AuthUser> {
+  return apiFetch<AuthUser>("/api/account/email", {
+    method: "PUT",
+    body: { currentPassword, email },
+  });
+}
+export function deleteAccount(currentPassword: string): Promise<void> {
+  return apiFetch<void>("/api/account", { method: "DELETE", body: { currentPassword } });
 }

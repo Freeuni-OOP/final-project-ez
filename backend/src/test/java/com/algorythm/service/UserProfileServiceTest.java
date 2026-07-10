@@ -58,7 +58,7 @@ class UserProfileServiceTest {
         Composition published = new Composition(alice, "Song", "pattern", 100);
         PublicCompositionResponse response =
                 new PublicCompositionResponse(
-                        "slug1", "Song", "pattern", 100, "alice", null, null, 2L, false, List.of());
+                        1L, "slug1", "Song", "pattern", 100, "alice", null, null, 2L, false, List.of());
         when(users.findByUsername("alice")).thenReturn(Optional.of(alice));
         when(compositions.findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(alice))
                 .thenReturn(List.of(published));

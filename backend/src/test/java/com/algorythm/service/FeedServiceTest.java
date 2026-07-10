@@ -131,7 +131,7 @@ class FeedServiceTest {
         Composition composition = new Composition(alice, "Song", "pattern", 100);
         PublicCompositionResponse response =
                 new PublicCompositionResponse(
-                        "slug1", "Song", "pattern", 100, "alice", null, null, 0L, false, List.of());
+                        1L, "slug1", "Song", "pattern", 100, "alice", null, null, 0L, false, List.of());
         when(users.findByUsername("alice")).thenReturn(Optional.of(alice));
         when(follows.findFollowingIds(alice.getId())).thenReturn(List.of(2L));
         when(compositions.findByOwnerIdInAndIsPublicTrueOrderByUpdatedAtDesc(any(), any()))

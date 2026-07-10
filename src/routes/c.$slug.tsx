@@ -7,6 +7,10 @@ import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { usePublicComposition, useRemixComposition } from "@/lib/queries";
 import { ErrorState, LoadingState } from "@/components/states";
+import { LikeButton } from "@/components/like-button";
+import { ReportButton } from "@/components/report-button";
+import { CommentSection } from "@/components/comment-section";
+import { reportComposition } from "@/lib/api";
 
 export const Route = createFileRoute("/c/$slug")({
   component: PublicComposition_,
@@ -109,6 +113,16 @@ function PublicComposition_() {
                 {playing ? t("stop") : t("play")}
               </button>
             </div>
+
+            <div className="mt-4 flex items-center gap-4">
+              <LikeButton
+                key={comp.id}
+                compositionId={comp.id}
+                likeCount={comp.likeCount}
+                likedByMe={comp.likedByMe}
+              />
+              <ReportButton onReport={() => reportComposition(comp.id)} />
+            </div>
             {user && (
               <div className="mt-4 rounded-xl border border-border bg-foreground/5 p-4">
                 <button
@@ -130,6 +144,8 @@ function PublicComposition_() {
             <pre className="mt-4 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground">
               {comp.pattern}
             </pre>
+
+            <CommentSection slug={comp.slug} compositionId={comp.id} />
           </>
         )}
 

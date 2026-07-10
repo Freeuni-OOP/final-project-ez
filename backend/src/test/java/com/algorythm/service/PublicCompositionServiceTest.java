@@ -122,7 +122,7 @@ class PublicCompositionServiceTest {
         Composition composition = new Composition(alice, "Song", "pattern", 100);
         PublicCompositionResponse response =
                 new PublicCompositionResponse(
-                        "slug1", "Song", "pattern", 100, "alice", null, null, 3L, true, List.of());
+                        1L, "slug1", "Song", "pattern", 100, "alice", null, null, 3L, true, List.of());
         when(compositions.findByIsPublicTrueOrderByUpdatedAtDesc(any()))
                 .thenReturn(List.of(composition));
         when(likeService.toResponses(List.of(composition), "bob")).thenReturn(List.of(response));
@@ -191,7 +191,7 @@ class PublicCompositionServiceTest {
         Composition composition = new Composition(alice, "Midnight Drive", "pattern", 100);
         PublicCompositionResponse response =
                 new PublicCompositionResponse(
-                        "slug1", "Midnight Drive", "pattern", 100, "alice", null, null, 0L, false,
+                        1L, "slug1", "Midnight Drive", "pattern", 100, "alice", null, null, 0L, false,
                         List.of());
         when(compositions.searchPublicByTitleOrTag(eq("midnight"), any()))
                 .thenReturn(List.of(composition));
@@ -216,7 +216,7 @@ class PublicCompositionServiceTest {
         composition.setSlug("share001");
         PublicCompositionResponse response =
                 new PublicCompositionResponse(
-                        "share001", "Song", "pattern", 100, "alice", null, null, 0L, false, List.of());
+                        1L, "share001", "Song", "pattern", 100, "alice", null, null, 0L, false, List.of());
         when(compositions.findBySlugAndIsPublicTrue("share001")).thenReturn(Optional.of(composition));
         when(likeService.toResponse(composition, "bob")).thenReturn(response);
 
