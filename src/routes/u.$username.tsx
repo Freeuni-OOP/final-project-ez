@@ -4,12 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
-import {
-  useToggleFollow,
-  useUserFollowers,
-  useUserFollowing,
-  useUserProfile,
-} from "@/lib/queries";
+import { useToggleFollow, useUserFollowers, useUserFollowing, useUserProfile } from "@/lib/queries";
 import { ErrorState, LoadingState } from "@/components/states";
 import { UserListDialog } from "@/components/user-list-dialog";
 
