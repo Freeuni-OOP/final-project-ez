@@ -127,10 +127,18 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <a
+          href="#main-content"
+          className="sr-only rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50"
+        >
+          Skip to content
+        </a>
         <AppHeader />
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <BackendStatus />
-        <Outlet />
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <div id="main-content" tabIndex={-1}>
+          <Outlet />
+        </div>
       </AuthProvider>
     </QueryClientProvider>
   );
