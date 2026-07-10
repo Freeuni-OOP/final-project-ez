@@ -13,12 +13,19 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * any write request under /api. Limits are per caller IP. When a caller exceeds a
  * limit they get a clear 429 with a Retry-After header rather than an error.
  * Disabled in tests via app.ratelimit.enabled=false.
+ *
+ * <p>The client IP is taken from the socket ({@code getRemoteAddr()}) by default.
+ * X-Forwarded-For is client-controllable, so trusting it would let a caller rotate
+ * a fake header and bypass the limit; it is only used when
+ * app.ratelimit.trust-forwarded-for=true, which should be set only when the app
+ * really runs behind a proxy that sets that header.
  */
 @Component
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     private final RateLimiter limiter;
     private final boolean enabled;
+    private final boolean trustForwardedFor;
     private final int authMax;
     private final int writeMax;
     private final long windowMs;
@@ -26,11 +33,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     public RateLimitInterceptor(
             RateLimiter limiter,
             @Value("${app.ratelimit.enabled:true}") boolean enabled,
+            @Value("${app.ratelimit.trust-forwarded-for:false}") boolean trustForwardedFor,
             @Value("${app.ratelimit.auth-max:10}") int authMax,
             @Value("${app.ratelimit.write-max:60}") int writeMax,
             @Value("${app.ratelimit.window-seconds:60}") long windowSeconds) {
         this.limiter = limiter;
         this.enabled = enabled;
+        this.trustForwardedFor = trustForwardedFor;
         this.authMax = authMax;
         this.writeMax = writeMax;
         this.windowMs = windowSeconds * 1000L;
@@ -73,10 +82,17 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return mutating && request.getRequestURI().startsWith("/api/");
     }
 
-    private static String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+    /**
+     * The caller's address. Uses the socket address by default; only honours
+     * X-Forwarded-For when explicitly trusted (i.e. we know a proxy sets it),
+     * otherwise the header is spoofable and the limit could be bypassed.
+     */
+    private String clientIp(HttpServletRequest request) {
+        if (trustForwardedFor) {
+            String forwarded = request.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                return forwarded.split(",")[0].trim();
+            }
         }
         return request.getRemoteAddr();
     }
