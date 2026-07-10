@@ -9,6 +9,10 @@ export const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 let authToken: string | null = null;
 
 export function setAuthToken(token: string | null): void {
+  // Module-level state is shared across all SSR requests on the server, so a token
+  // must never be held there — it could leak between users. The token is only ever
+  // set from client-side effects; this guard makes that invariant explicit.
+  if (typeof window === "undefined") return;
   authToken = token;
 }
 

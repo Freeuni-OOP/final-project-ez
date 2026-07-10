@@ -51,6 +51,11 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (!enabled) {
             return true;
         }
+        // Preflight requests are not real calls; counting them would let a browser's
+        // automatic OPTIONS eat into the auth bucket (each login is OPTIONS + POST).
+        if ("OPTIONS".equals(request.getMethod())) {
+            return true;
+        }
         String ip = clientIp(request);
         if (isAuth(request.getRequestURI())) {
             enforce(response, "auth:" + ip, authMax);
