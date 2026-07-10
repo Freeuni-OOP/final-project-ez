@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.servlet.FilterChain;
+import com.algorythm.repository.UserRepository;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 class JwtAuthenticationFilterTest {
 
     private final JwtService jwtService = mock(JwtService.class);
-    private final JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService);
+    private final UserRepository users = mock(UserRepository.class);
+    private final JwtAuthenticationFilter filter =
+            new JwtAuthenticationFilter(jwtService, users);
 
     @AfterEach
     void clearContext() {

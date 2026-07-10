@@ -19,8 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Admin-only moderation. Every method first confirms the caller is an admin, so a
- * normal user who reaches these endpoints is refused with 403.
+ * Admin-only moderation. Access is enforced centrally by the security config
+ * (hasRole("ADMIN") on /api/admin/**), so these methods no longer re-check the
+ * caller's role — a non-admin never reaches them.
  */
 @Service
 public class AdminService {
@@ -42,8 +43,7 @@ public class AdminService {
 
     /** Open reports, newest first. */
     @Transactional(readOnly = true)
-    public List<ReportResponse> listOpenReports(String adminUsername) {
-        requireAdmin(adminUsername);
+    public List<ReportResponse> listOpenReports() {
         return reports.findByStatusOrderByCreatedAtDesc(ReportStatus.OPEN).stream()
                 .map(ReportResponse::from)
                 .toList();
@@ -51,8 +51,7 @@ public class AdminService {
 
     /** Remove any composition. Its reports and dependent rows cascade away. */
     @Transactional
-    public void removeComposition(String adminUsername, Long compositionId) {
-        requireAdmin(adminUsername);
+    public void removeComposition(Long compositionId) {
         Composition composition = compositions.findById(compositionId)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Composition not found"));
@@ -61,8 +60,7 @@ public class AdminService {
 
     /** Remove any comment. */
     @Transactional
-    public void removeComment(String adminUsername, Long commentId) {
-        requireAdmin(adminUsername);
+    public void removeComment(Long commentId) {
         Comment comment = comments.findById(commentId)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
@@ -71,8 +69,7 @@ public class AdminService {
 
     /** Mark a report resolved without removing the content (it was fine). */
     @Transactional
-    public void dismissReport(String adminUsername, Long reportId) {
-        requireAdmin(adminUsername);
+    public void dismissReport(Long reportId) {
         Report report = reports.findById(reportId)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found"));
@@ -81,8 +78,7 @@ public class AdminService {
 
     /** Promote another user to admin. */
     @Transactional
-    public void promote(String adminUsername, String targetUsername) {
-        requireAdmin(adminUsername);
+    public void promote(String targetUsername) {
         User target = users.findByUsername(targetUsername)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -91,21 +87,10 @@ public class AdminService {
 
     /** Basic site numbers. */
     @Transactional(readOnly = true)
-    public SiteStatsResponse stats(String adminUsername) {
-        requireAdmin(adminUsername);
+    public SiteStatsResponse stats() {
         return new SiteStatsResponse(
                 users.count(),
                 compositions.count(),
                 reports.countByStatus(ReportStatus.OPEN));
-    }
-
-    private User requireAdmin(String username) {
-        User user = users.findByUsername(username)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated"));
-        if (user.getRole() != Role.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admins only");
-        }
-        return user;
     }
 }
