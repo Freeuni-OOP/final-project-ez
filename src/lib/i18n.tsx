@@ -13,6 +13,7 @@ const strings = {
   nav_library: "Library",
   nav_syntax: "Syntax Guide",
   nav_explore: "Explore",
+  nav_admin: "Admin",
   nav_feed: "Feed",
 
   bpm: "BPM",
@@ -62,6 +63,21 @@ const strings = {
   joined: "Joined",
   published_works: "Published compositions",
   no_published: "No published compositions yet.",
+
+  // Moderation + admin
+  report: "Report",
+  reported: "Reported",
+  admin_title: "Moderation",
+  admin_sub: "Reported content and basic site numbers.",
+  admin_forbidden: "Admins only.",
+  admin_reports: "Open reports",
+  admin_no_reports: "No open reports.",
+  admin_remove: "Remove",
+  admin_dismiss: "Dismiss",
+  admin_reported_by: "reported by",
+  admin_users: "Users",
+  admin_compositions: "Compositions",
+  admin_open_reports: "Open reports",
 
   // Follows + feed
   follow: "Follow",

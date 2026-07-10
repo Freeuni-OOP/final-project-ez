@@ -5,7 +5,8 @@ import { AudioEngine } from "@/lib/audio-engine";
 import { SoundVisualizer } from "@/components/sound-visualizer";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { usePublicComposition, useRemixComposition } from "@/lib/queries";
+import { usePublicComposition, useRemixComposition, useReportComposition } from "@/lib/queries";
+import { ReportButton } from "@/components/report-button";
 
 export const Route = createFileRoute("/c/$slug")({
   component: PublicComposition_,
@@ -19,6 +20,7 @@ function PublicComposition_() {
 
   const { data: comp, isError } = usePublicComposition(slug);
   const remixMutation = useRemixComposition();
+  const reportMutation = useReportComposition();
   const [playing, setPlaying] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [remixError, setRemixError] = useState<string | null>(null);
@@ -129,6 +131,10 @@ function PublicComposition_() {
             <pre className="mt-4 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground">
               {comp.pattern}
             </pre>
+
+            <div className="mt-4">
+              <ReportButton onReport={() => reportMutation.mutateAsync({ id: comp.id })} />
+            </div>
           </>
         )}
 
