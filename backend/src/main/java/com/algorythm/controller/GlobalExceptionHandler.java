@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -44,6 +45,23 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleUnreadable(
             HttpMessageNotReadableException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Malformed request body", request);
+    }
+
+    /**
+     * A database constraint clash, almost always a unique / primary-key collision
+     * from two mutating requests racing (e.g. the same user liking or following the
+     * same target at the same moment). The database kept exactly one row; we surface
+     * a 409 instead of a 500, and the losing request's transaction rolls back cleanly
+     * so nothing is left half-written. Logged at WARN so a genuine constraint bug is
+     * still visible without being treated as a crash.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleConflict(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Data integrity violation on {} {}: {}",
+                request.getMethod(), request.getRequestURI(),
+                ex.getMostSpecificCause().getMessage());
+        return build(HttpStatus.CONFLICT, "That action conflicts with the current state", request);
     }
 
     /** The exceptions our services throw on purpose (not found, unauthorized, forbidden, conflict). */
