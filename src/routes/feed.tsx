@@ -4,6 +4,7 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { useFollowingFeed } from "@/lib/queries";
+import { EmptyState, LoadingState } from "@/components/states";
 
 export const Route = createFileRoute("/feed")({
   head: () => ({
@@ -31,11 +32,11 @@ function Feed() {
         <p className="mt-2 text-sm text-muted-foreground sm:text-base">{t("feed_sub")}</p>
 
         {loading ? (
-          <p className="mt-8 text-sm text-muted-foreground">…</p>
+          <LoadingState message={t("loading")} className="mt-8" />
         ) : !user ? (
-          <p className="mt-8 text-sm text-muted-foreground">{t("login_to_feed")}</p>
+          <EmptyState message={t("login_to_feed")} className="mt-8" />
         ) : !isPending && items.length === 0 ? (
-          <p className="mt-8 text-sm text-muted-foreground">{t("empty_feed")}</p>
+          <EmptyState message={t("empty_feed")} className="mt-8" />
         ) : (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((c) => (

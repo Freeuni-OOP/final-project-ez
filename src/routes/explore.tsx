@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
 import { useInfinitePublicCompositions } from "@/lib/queries";
+import { EmptyState, LoadingState } from "@/components/states";
 
 export const Route = createFileRoute("/explore")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -62,6 +63,7 @@ function Explore() {
             onKeyDown={(e) => {
               if (e.key === "Enter") applySearch();
             }}
+            aria-label="Search compositions"
             placeholder="Search compositions..."
             className="min-h-10 flex-1 rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
@@ -90,9 +92,9 @@ function Explore() {
         )}
 
         {isPending ? (
-          <p className="mt-8 text-sm text-muted-foreground">Loading compositions...</p>
+          <LoadingState message="Loading compositions..." className="mt-8" />
         ) : items.length === 0 ? (
-          <p className="mt-8 text-sm text-muted-foreground">No compositions found.</p>
+          <EmptyState message="No compositions found." className="mt-8" />
         ) : (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((c) => (

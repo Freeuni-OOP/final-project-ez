@@ -61,6 +61,7 @@ const strings = {
   not_found: "This isn't available.",
   load_more: "Load more",
   loading_more: "Loading…",
+  loading: "Loading…",
   joined: "Joined",
   published_works: "Published compositions",
   no_published: "No published compositions yet.",
