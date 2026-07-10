@@ -63,6 +63,24 @@ const strings = {
   published_works: "Published compositions",
   no_published: "No published compositions yet.",
 
+  // Account settings
+  nav_settings: "Settings",
+  settings_title: "Account settings",
+  settings_sub: "Manage your password, email, and account.",
+  change_password: "Change password",
+  current_password: "Current password",
+  new_password: "New password",
+  change_email: "Change email",
+  password_updated: "Password updated.",
+  email_updated: "Email updated.",
+  delete_account: "Delete account",
+  delete_account_warn:
+    "This permanently deletes your account and everything tied to it. This cannot be undone.",
+  delete_account_confirm: "Yes, delete my account",
+  cancel: "Cancel",
+  login_to_settings: "Log in to manage your account.",
+  something_wrong: "Something went wrong.",
+
   // Follows + feed
   follow: "Follow",
   unfollow: "Unfollow",
