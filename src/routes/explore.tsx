@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import { useState } from "react";
 
 import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { LikeButton } from "@/components/like-button";
 import { useI18n } from "@/lib/i18n";
 import { useInfinitePublicCompositions } from "@/lib/queries";
 import { EmptyState, LoadingState } from "@/components/states";
@@ -126,6 +127,13 @@ function Explore() {
                   <p className="mt-3 truncate font-mono text-[11px] text-muted-foreground">
                     {c.pattern.split("\n")[0]}
                   </p>
+                  <div className="mt-3 flex justify-end">
+                    <LikeButton
+                      compositionId={c.id}
+                      likeCount={c.likeCount}
+                      likedByMe={c.likedByMe}
+                    />
+                  </div>
                 </SpotlightCard>
               </Link>
             ))}

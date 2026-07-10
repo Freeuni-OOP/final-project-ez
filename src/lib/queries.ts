@@ -27,6 +27,17 @@ import {
   unfollowUser,
   unpublishComposition,
   updateComposition,
+  listComments,
+  postComment,
+  deleteComment,
+  getAdminReports,
+  adminRemoveComposition,
+  adminRemoveComment,
+  dismissReport,
+  getSiteStats,
+  changePassword,
+  changeEmail,
+  deleteAccount,
 } from "@/lib/api";
 
 // --- Health ------------------------------------------------------------
@@ -211,4 +222,79 @@ export function useMarkNotificationRead() {
       queryClient.invalidateQueries({ queryKey: ["notificationsUnreadCount"] });
     },
   });
+}
+
+// --- Comments --------------------------------------------------------------
+
+export function useComments(slug: string) {
+  return useQuery({ queryKey: ["comments", slug], queryFn: () => listComments(slug) });
+}
+export function usePostComment(slug: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ compositionId, body }: { compositionId: number; body: string }) =>
+      postComment(compositionId, body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["comments", slug] }),
+  });
+}
+export function useDeleteComment(slug: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteComment(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["comments", slug] }),
+  });
+}
+
+// --- Admin / moderation (admin only) --------------------------------------
+
+export function useAdminReports(enabled: boolean) {
+  return useQuery({ queryKey: ["adminReports"], queryFn: getAdminReports, enabled });
+}
+export function useSiteStats(enabled: boolean) {
+  return useQuery({ queryKey: ["siteStats"], queryFn: getSiteStats, enabled });
+}
+function useInvalidateAdmin() {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+    queryClient.invalidateQueries({ queryKey: ["siteStats"] });
+  };
+}
+export function useAdminRemoveComposition() {
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: (id: number) => adminRemoveComposition(id),
+    onSuccess: invalidate,
+  });
+}
+export function useAdminRemoveComment() {
+  const invalidate = useInvalidateAdmin();
+  return useMutation({ mutationFn: (id: number) => adminRemoveComment(id), onSuccess: invalidate });
+}
+export function useDismissReport() {
+  const invalidate = useInvalidateAdmin();
+  return useMutation({ mutationFn: (id: number) => dismissReport(id), onSuccess: invalidate });
+}
+
+// --- Account (auth) --------------------------------------------------------
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: ({
+      currentPassword,
+      newPassword,
+    }: {
+      currentPassword: string;
+      newPassword: string;
+    }) => changePassword(currentPassword, newPassword),
+  });
+}
+export function useChangeEmail() {
+  return useMutation({
+    mutationFn: ({ currentPassword, email }: { currentPassword: string; email: string }) =>
+      changeEmail(currentPassword, email),
+  });
+}
+export function useDeleteAccount() {
+  return useMutation({ mutationFn: (currentPassword: string) => deleteAccount(currentPassword) });
 }
