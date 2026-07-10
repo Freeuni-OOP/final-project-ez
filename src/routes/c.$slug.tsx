@@ -6,6 +6,7 @@ import { SoundVisualizer } from "@/components/sound-visualizer";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { usePublicComposition, useRemixComposition } from "@/lib/queries";
+import { ErrorState, LoadingState } from "@/components/states";
 
 export const Route = createFileRoute("/c/$slug")({
   component: PublicComposition_,
@@ -67,9 +68,9 @@ function PublicComposition_() {
     <main className="min-h-screen bg-background text-foreground">
       <section className="mx-auto max-w-3xl px-6 py-12">
         {isError ? (
-          <p className="text-sm text-muted-foreground">{t("not_found")}</p>
+          <ErrorState message={t("not_found")} />
         ) : !comp ? (
-          <p className="text-sm text-muted-foreground">…</p>
+          <LoadingState message={t("loading")} />
         ) : (
           <>
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{comp.title}</h1>
