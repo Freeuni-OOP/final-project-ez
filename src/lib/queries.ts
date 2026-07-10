@@ -16,6 +16,8 @@ import {
   getHealth,
   getPublicComposition,
   getUnreadNotificationCount,
+  getUserFollowers,
+  getUserFollowing,
   getUserProfile,
   listCompositions,
   listNotifications,
@@ -23,6 +25,7 @@ import {
   markNotificationRead,
   remixComposition,
   searchPublicCompositions,
+  searchUsers,
   publishComposition,
   unfollowUser,
   unpublishComposition,
@@ -90,6 +93,56 @@ export function useUserProfile(username: string) {
   return useQuery({
     queryKey: ["userProfile", username],
     queryFn: () => getUserProfile(username),
+  });
+}
+
+// --- People: search + follower/following lists ----------------------------
+
+/** Username search. Disabled (and cached empty) while the query is blank. */
+export function useSearchUsers(query: string) {
+  const trimmed = query.trim();
+  return useQuery({
+    queryKey: ["userSearch", trimmed],
+    queryFn: () => searchUsers(trimmed),
+    enabled: trimmed.length > 0,
+  });
+}
+
+/** People who follow `username`. Only fetched when `enabled` (e.g. dialog open). */
+export function useUserFollowers(username: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["userFollowers", username],
+    queryFn: () => getUserFollowers(username),
+    enabled,
+  });
+}
+
+/** People `username` follows. Only fetched when `enabled` (e.g. dialog open). */
+export function useUserFollowing(username: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["userFollowing", username],
+    queryFn: () => getUserFollowing(username),
+    enabled,
+  });
+}
+
+/**
+ * Follow/unfollow used by list rows (search results, follower/following lists),
+ * where there's no single profile cache to patch. On success it refreshes every
+ * place a user's follow state or counts show up. Rows keep their own optimistic
+ * state for instant feedback; this just reconciles the caches.
+ */
+export function useToggleFollowUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ username, next }: { username: string; next: boolean }) =>
+      next ? followUser(username) : unfollowUser(username),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["userSearch"] });
+      queryClient.invalidateQueries({ queryKey: ["userFollowers"] });
+      queryClient.invalidateQueries({ queryKey: ["userFollowing"] });
+    },
   });
 }
 
