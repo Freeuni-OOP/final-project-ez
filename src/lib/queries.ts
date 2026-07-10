@@ -15,9 +15,12 @@ import {
   getFollowingFeed,
   getHealth,
   getPublicComposition,
+  getUnreadNotificationCount,
   getUserProfile,
   listCompositions,
+  listNotifications,
   listPublicCompositions,
+  markNotificationRead,
   searchPublicCompositions,
   publishComposition,
   unfollowUser,
@@ -143,6 +146,41 @@ export function useToggleFollow(username: string) {
     },
     onError: (_err, _next, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
+    },
+  });
+}
+
+// --- Notifications (auth) --------------------------------------------------
+
+// Polled rather than pushed - there's no websocket/SSE channel here, so a
+// 30s interval keeps the bell reasonably fresh without hammering the API.
+const NOTIFICATIONS_POLL_MS = 30_000;
+
+export function useNotifications(username: string | undefined) {
+  return useQuery({
+    queryKey: ["notifications", username],
+    queryFn: () => listNotifications(),
+    enabled: !!username,
+    refetchInterval: NOTIFICATIONS_POLL_MS,
+  });
+}
+
+export function useUnreadNotificationCount(username: string | undefined) {
+  return useQuery({
+    queryKey: ["notificationsUnreadCount", username],
+    queryFn: getUnreadNotificationCount,
+    enabled: !!username,
+    refetchInterval: NOTIFICATIONS_POLL_MS,
+  });
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => markNotificationRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notificationsUnreadCount"] });
     },
   });
 }

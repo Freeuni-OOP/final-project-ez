@@ -88,6 +88,14 @@ const strings = {
 
   syntax_title: "Syntax Guide",
   syntax_sub: "Learn the small language that powers every track.",
+
+  // Notifications
+  notifications: "Notifications",
+  notifications_empty: "No notifications yet.",
+  mark_all_read: "Mark all as read",
+  notif_liked: "liked",
+  notif_commented: "commented on",
+  notif_followed: "started following you",
 } as const;
 
 export type TextKey = keyof typeof strings;
