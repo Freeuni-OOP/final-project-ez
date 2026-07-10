@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/api/health",
                                 "/api/public/**")
                         .permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(
