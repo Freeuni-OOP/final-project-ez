@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { AudioEngine } from "@/lib/audio-engine";
 import { SoundVisualizer } from "@/components/sound-visualizer";
+import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { usePublicComposition } from "@/lib/queries";
+import { usePublicComposition, useRemixComposition } from "@/lib/queries";
 
 export const Route = createFileRoute("/c/$slug")({
   component: PublicComposition_,
@@ -12,11 +13,15 @@ export const Route = createFileRoute("/c/$slug")({
 
 function PublicComposition_() {
   const { slug } = Route.useParams();
+  const navigate = useNavigate();
   const { t } = useI18n();
+  const { user } = useAuth();
 
   const { data: comp, isError } = usePublicComposition(slug);
+  const remixMutation = useRemixComposition();
   const [playing, setPlaying] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [remixError, setRemixError] = useState<string | null>(null);
   const engineRef = useRef<AudioEngine | null>(null);
 
   // Stop any playback from the previous composition when navigating to a
@@ -41,6 +46,21 @@ function PublicComposition_() {
     engineRef.current?.stop();
     setPlaying(false);
     setAnalyser(null);
+  };
+  const remix = async () => {
+    setRemixError(null);
+
+    try {
+      const copy = await remixMutation.mutateAsync(slug);
+
+      await navigate({
+        to: "/",
+        search: { editId: copy.id },
+        hash: "composer",
+      });
+    } catch (error) {
+      setRemixError(error instanceof Error ? error.message : "Could not remix composition.");
+    }
   };
 
   return (
@@ -88,7 +108,24 @@ function PublicComposition_() {
                 {playing ? t("stop") : t("play")}
               </button>
             </div>
+            {user && (
+              <div className="mt-4 rounded-xl border border-border bg-foreground/5 p-4">
+                <button
+                  type="button"
+                  onClick={remix}
+                  disabled={remixMutation.isPending}
+                  className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {remixMutation.isPending ? "Creating your copy..." : "Remix"}
+                </button>
 
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Creates your own private copy. The original composition will not be changed.
+                </p>
+
+                {remixError && <p className="mt-2 text-xs text-destructive">{remixError}</p>}
+              </div>
+            )}
             <pre className="mt-4 overflow-x-auto rounded-md border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed text-foreground">
               {comp.pattern}
             </pre>

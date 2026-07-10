@@ -144,6 +144,16 @@ export function unpublishComposition(id: number): Promise<Composition> {
   return apiFetch<Composition>(`/api/compositions/${id}/unpublish`, { method: "POST" });
 }
 
+/**
+ * Copies a public composition into the current user's library as a new
+ * private composition.
+ */
+export function remixComposition(slug: string): Promise<Composition> {
+  return apiFetch<Composition>(`/api/compositions/remix/${encodeURIComponent(slug)}`, {
+    method: "POST",
+  });
+}
+
 // --- Public compositions + profiles (no auth needed) --------------
 
 export interface PublicComposition {
@@ -212,7 +222,6 @@ export function unfollowUser(username: string): Promise<void> {
 export function getFollowingFeed(page = 0, size = 20): Promise<PublicComposition[]> {
   return apiFetch<PublicComposition[]>(`/api/feed/following?page=${page}&size=${size}`);
 }
-
 // --- Notifications (auth) ------------------------------------------
 
 export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW";
@@ -239,5 +248,7 @@ export function getUnreadNotificationCount(): Promise<number> {
 }
 
 export function markNotificationRead(id: number): Promise<void> {
-  return apiFetch<void>(`/api/notifications/${id}/read`, { method: "POST" });
+  return apiFetch<void>(`/api/notifications/${id}/read`, {
+    method: "POST",
+  });
 }
