@@ -3,7 +3,7 @@
 // refetch-on-window-focus all come from React Query for free; the query keys
 // below are the single source of truth for how that cache is organized.
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   type Composition,
@@ -53,6 +53,25 @@ export function usePublicComposition(slug: string) {
   return useQuery({
     queryKey: ["publicComposition", slug],
     queryFn: () => getPublicComposition(slug),
+  });
+}
+
+/**
+ * Infinite version of the explore feed. Browsing (with or without a tag) pages
+ * through listPublicCompositions; a full page means there may be more. Search
+ * returns all matches at once, so there's never a next page while searching.
+ */
+export function useInfinitePublicCompositions(tag?: string, search = "", size = 20) {
+  const searching = search.trim().length > 0;
+  return useInfiniteQuery({
+    queryKey: ["publicCompositions", "infinite", tag ?? "", search, size],
+    queryFn: ({ pageParam }) =>
+      searching
+        ? searchPublicCompositions(search.trim())
+        : listPublicCompositions(pageParam, size, tag),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      searching || lastPage.length < size ? undefined : allPages.length,
   });
 }
 
