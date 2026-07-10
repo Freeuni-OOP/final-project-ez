@@ -6,6 +6,7 @@ import com.algorythm.model.Composition;
 import com.algorythm.model.User;
 import com.algorythm.repository.CompositionRepository;
 import com.algorythm.repository.UserRepository;
+import com.algorythm.security.ViewerResolver;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,15 +24,18 @@ public class UserProfileService {
     private final CompositionRepository compositions;
     private final LikeService likeService;
     private final FollowService followService;
+    private final ViewerResolver viewerResolver;
 
     public UserProfileService(UserRepository users,
                               CompositionRepository compositions,
                               LikeService likeService,
-                              FollowService followService) {
+                              FollowService followService,
+                              ViewerResolver viewerResolver) {
         this.users = users;
         this.compositions = compositions;
         this.likeService = likeService;
         this.followService = followService;
+        this.viewerResolver = viewerResolver;
     }
 
     /** viewerUsername is the logged-in user, or null for anonymous requests. */
@@ -47,7 +51,7 @@ public class UserProfileService {
 
         long followerCount = followService.followerCount(user.getId());
         long followingCount = followService.followingCount(user.getId());
-        boolean isFollowing = followService.isFollowing(viewerId(viewerUsername), user.getId());
+        boolean isFollowing = followService.isFollowing(viewerResolver.resolveId(viewerUsername), user.getId());
 
         return new UserProfileResponse(
                 user.getUsername(),
@@ -58,10 +62,4 @@ public class UserProfileService {
                 published);
     }
 
-    private Long viewerId(String viewerUsername) {
-        if (viewerUsername == null) {
-            return null;
-        }
-        return users.findByUsername(viewerUsername).map(User::getId).orElse(null);
-    }
 }
