@@ -27,6 +27,13 @@ import {
   unfollowUser,
   unpublishComposition,
   updateComposition,
+  reportComposition,
+  reportComment,
+  getAdminReports,
+  adminRemoveComposition,
+  adminRemoveComment,
+  dismissReport,
+  getSiteStats,
 } from "@/lib/api";
 
 // --- Health ------------------------------------------------------------
@@ -191,5 +198,69 @@ export function useMarkNotificationRead() {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["notificationsUnreadCount"] });
     },
+  });
+}
+
+// --- Reporting (auth) -----------------------------------------------------
+
+export function useReportComposition() {
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason?: string }) => reportComposition(id, reason),
+  });
+}
+
+export function useReportComment() {
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason?: string }) => reportComment(id, reason),
+  });
+}
+
+// --- Admin / moderation (admin only) --------------------------------------
+
+export function useAdminReports(enabled: boolean) {
+  return useQuery({
+    queryKey: ["adminReports"],
+    queryFn: getAdminReports,
+    enabled,
+  });
+}
+
+export function useSiteStats(enabled: boolean) {
+  return useQuery({
+    queryKey: ["siteStats"],
+    queryFn: getSiteStats,
+    enabled,
+  });
+}
+
+function useInvalidateAdmin() {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+    queryClient.invalidateQueries({ queryKey: ["siteStats"] });
+  };
+}
+
+export function useAdminRemoveComposition() {
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: (id: number) => adminRemoveComposition(id),
+    onSuccess: invalidate,
+  });
+}
+
+export function useAdminRemoveComment() {
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: (id: number) => adminRemoveComment(id),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDismissReport() {
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: (id: number) => dismissReport(id),
+    onSuccess: invalidate,
   });
 }

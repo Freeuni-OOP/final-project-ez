@@ -73,6 +73,7 @@ export interface AuthUser {
   id: number;
   username: string;
   email: string;
+  role: string;
   createdAt: string;
 }
 
@@ -157,6 +158,7 @@ export function remixComposition(slug: string): Promise<Composition> {
 // --- Public compositions + profiles (no auth needed) --------------
 
 export interface PublicComposition {
+  id: number;
   slug: string;
   title: string;
   pattern: string;
@@ -206,49 +208,62 @@ export function getUserProfile(username: string): Promise<UserProfile> {
   return apiFetch<UserProfile>(`/api/public/users/${username}`);
 }
 
-// --- Follows + feed (auth) ----------------------------------------
+// --- Follows + feed (auth) -------------------
 
-/** Follow a user. No-op on the server if already following. */
-export function followUser(username: string): Promise<void> {
-  return apiFetch<void>(`/api/users/${username}/follow`, { method: "POST" });
+// --- Reporting (auth) ---------------------------------------------
+
+/** Report a composition as inappropriate. The reason is optional. */
+export function reportComposition(id: number, reason?: string): Promise<void> {
+  return apiFetch<void>(`/api/compositions/${id}/report`, {
+    method: "POST",
+    body: { reason },
+  });
 }
 
-/** Stop following a user. No-op on the server if not following. */
-export function unfollowUser(username: string): Promise<void> {
-  return apiFetch<void>(`/api/users/${username}/follow`, { method: "DELETE" });
+/** Report a comment as inappropriate. The reason is optional. */
+export function reportComment(id: number, reason?: string): Promise<void> {
+  return apiFetch<void>(`/api/comments/${id}/report`, {
+    method: "POST",
+    body: { reason },
+  });
 }
 
-/** Public compositions by people the current user follows, newest first. */
-export function getFollowingFeed(page = 0, size = 20): Promise<PublicComposition[]> {
-  return apiFetch<PublicComposition[]>(`/api/feed/following?page=${page}&size=${size}`);
-}
-// --- Notifications (auth) ------------------------------------------
+// --- Admin / moderation (admin only) ------------------------------
 
-export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW";
-
-export interface Notification {
+export interface Report {
   id: number;
-  type: NotificationType;
-  actor: string;
-  compositionId: number | null;
-  compositionTitle: string | null;
-  compositionSlug: string | null;
-  commentId: number | null;
-  read: boolean;
+  targetType: "COMPOSITION" | "COMMENT";
+  targetId: number;
+  targetLabel: string;
+  reporter: string;
+  reason: string | null;
+  status: string;
   createdAt: string;
 }
 
-/** The current user's most recent notifications, newest first. */
-export function listNotifications(limit = 20): Promise<Notification[]> {
-  return apiFetch<Notification[]>(`/api/notifications?limit=${limit}`);
+export interface SiteStats {
+  userCount: number;
+  compositionCount: number;
+  openReportCount: number;
 }
 
-export function getUnreadNotificationCount(): Promise<number> {
-  return apiFetch<number>("/api/notifications/unread-count");
+/** Open reports, newest first. Admins only (403 otherwise). */
+export function getAdminReports(): Promise<Report[]> {
+  return apiFetch<Report[]>("/api/admin/reports");
 }
 
-export function markNotificationRead(id: number): Promise<void> {
-  return apiFetch<void>(`/api/notifications/${id}/read`, {
-    method: "POST",
-  });
+export function adminRemoveComposition(id: number): Promise<void> {
+  return apiFetch<void>(`/api/admin/compositions/${id}`, { method: "DELETE" });
+}
+
+export function adminRemoveComment(id: number): Promise<void> {
+  return apiFetch<void>(`/api/admin/comments/${id}`, { method: "DELETE" });
+}
+
+export function dismissReport(id: number): Promise<void> {
+  return apiFetch<void>(`/api/admin/reports/${id}/dismiss`, { method: "POST" });
+}
+
+export function getSiteStats(): Promise<SiteStats> {
+  return apiFetch<SiteStats>("/api/admin/stats");
 }

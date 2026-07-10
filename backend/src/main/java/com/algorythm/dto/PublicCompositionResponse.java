@@ -13,6 +13,7 @@ import java.util.List;
  * user who liked it.
  */
 public record PublicCompositionResponse(
+        Long id,
         String slug,
         String title,
         String pattern,
@@ -26,6 +27,7 @@ public record PublicCompositionResponse(
 
     public static PublicCompositionResponse from(Composition c, long likeCount, boolean likedByMe) {
         return new PublicCompositionResponse(
+                c.getId(),
                 c.getSlug(),
                 c.getTitle(),
                 c.getPattern(),

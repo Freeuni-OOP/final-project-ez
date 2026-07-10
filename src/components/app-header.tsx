@@ -32,25 +32,27 @@ export function AppHeader() {
         </Link>
 
         <nav className="flex items-center gap-1">
-          {(user ? [...navItems, { to: "/feed", label: "nav_feed" } as const] : navItems).map(
-            (item) => {
-              const active = pathname === item.to;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground/70 hover:bg-accent hover:text-foreground",
-                  )}
-                >
-                  {t(item.label)}
-                </Link>
-              );
-            },
-          )}
+          {[
+            ...navItems,
+            ...(user ? [{ to: "/feed", label: "nav_feed" } as const] : []),
+            ...(user?.role === "ADMIN" ? [{ to: "/admin", label: "nav_admin" } as const] : []),
+          ].map((item) => {
+            const active = pathname === item.to;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-primary/10 text-primary"
+                    : "text-foreground/70 hover:bg-accent hover:text-foreground",
+                )}
+              >
+                {t(item.label)}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Auth state */}
