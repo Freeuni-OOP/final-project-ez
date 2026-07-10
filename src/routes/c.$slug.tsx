@@ -64,6 +64,20 @@ function PublicComposition_() {
               </Link>{" "}
               · {comp.bpm} {t("bpm")}
             </p>
+            {comp.tags.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {comp.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    to="/explore"
+                    search={{ tag }}
+                    className="rounded-full border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            )}
 
             <div className="mt-6 rounded-xl border border-border bg-foreground/5 p-4">
               <SoundVisualizer analyser={analyser} className="h-24" />
