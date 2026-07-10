@@ -27,7 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @ExtendWith(MockitoExtension.class)
 class FollowServiceTest {
-
+    @Mock private NotificationService notifications;
     @Mock private FollowRepository follows;
     @Mock private UserRepository users;
 
@@ -38,7 +38,7 @@ class FollowServiceTest {
 
     @BeforeEach
     void setUp() {
-        followService = new FollowService(follows, users);
+        followService = new FollowService(follows, users, notifications);
     }
 
     // --- follow ------------------------------------------------------------

@@ -33,7 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @ExtendWith(MockitoExtension.class)
 class LikeServiceTest {
-
+    @Mock private NotificationService notifications;
     @Mock private CompositionLikeRepository likes;
     @Mock private CompositionRepository compositions;
     @Mock private UserRepository users;
@@ -44,7 +44,7 @@ class LikeServiceTest {
 
     @BeforeEach
     void setUp() {
-        likeService = new LikeService(likes, compositions, users);
+        likeService = new LikeService(likes, compositions, users, notifications);
     }
 
     // --- like ------------------------------------------------------------

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.algorythm.model.NotificationType;
 
 /**
  * Following between users. Handles follow/unfollow (idempotent, no self-follow)
@@ -19,10 +20,16 @@ public class FollowService {
 
     private final FollowRepository follows;
     private final UserRepository users;
+    private final NotificationService notifications;
 
-    public FollowService(FollowRepository follows, UserRepository users) {
+    public FollowService(
+            FollowRepository follows,
+            UserRepository users,
+            NotificationService notifications
+    ) {
         this.follows = follows;
         this.users = users;
+        this.notifications = notifications;
     }
 
     /** Follow the given user. Following again is a no-op; following yourself is rejected. */
@@ -36,6 +43,13 @@ public class FollowService {
         FollowId id = new FollowId(follower.getId(), target.getId());
         if (!follows.existsById(id)) {
             follows.save(new Follow(follower.getId(), target.getId()));
+            notifications.notify(
+                    target,
+                    follower,
+                    NotificationType.FOLLOW,
+                    null,
+                    null
+            );
         }
     }
 

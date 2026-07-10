@@ -33,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
 
+    @Mock private NotificationService notifications;
     @Mock private CommentRepository comments;
     @Mock private CompositionRepository compositions;
     @Mock private UserRepository users;
@@ -43,7 +44,7 @@ class CommentServiceTest {
 
     @BeforeEach
     void setUp() {
-        commentService = new CommentService(comments, compositions, users);
+        commentService = new CommentService(comments, compositions, users, notifications);
     }
 
     // --- listForPublicComposition -------------------------------------------
