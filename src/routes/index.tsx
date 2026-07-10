@@ -192,6 +192,7 @@ function Hero() {
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
         <h1 className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          <span className="text-5xl font-semibold text-foreground sm:text-7xl">Where</span>
           <span className="hero-code text-5xl text-foreground sm:text-7xl">code</span>
           <span className="text-2xl font-light text-muted-foreground sm:text-4xl">becomes</span>
           <span className="hero-music text-6xl text-primary sm:text-8xl">music</span>
