@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 
 import { AuthDialog } from "@/components/auth-dialog";
+import { NotificationsMenu } from "@/components/notifications-menu";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,7 @@ export function AppHeader() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <NotificationsMenu username={user.username} />
               <span className="text-sm font-medium text-foreground">{user.username}</span>
               <button
                 onClick={logout}

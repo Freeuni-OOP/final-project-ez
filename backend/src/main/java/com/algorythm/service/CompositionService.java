@@ -94,6 +94,30 @@ public class CompositionService {
         return CompositionResponse.from(composition);
     }
 
+    /**
+     * Copy a public composition into the current user's library as a fresh,
+     * private, unpublished composition they own, remembering the original via
+     * remixedFrom. Only public compositions can be remixed - looking up by
+     * slug scoped to isPublicTrue means anything not public simply 404s,
+     * exactly like the public read endpoints.
+     */
+    @Transactional
+    public CompositionResponse remix(String username, String slug) {
+        User owner = currentUser(username);
+        Composition source =
+                compositions.findBySlugAndIsPublicTrue(slug)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND, "Composition not found"));
+
+        Composition remix =
+                new Composition(owner, source.getTitle(), source.getPattern(), source.getBpm());
+        remix.setTags(source.getTags());
+        remix.setRemixedFrom(source);
+        Composition saved = compositions.save(remix);
+        return CompositionResponse.from(saved);
+    }
+
     /** The composition with this id owned by the user, or 404. */
     private Composition owned(String username, Long id) {
         return compositions.findByIdAndOwner(id, currentUser(username))

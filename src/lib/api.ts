@@ -212,3 +212,32 @@ export function unfollowUser(username: string): Promise<void> {
 export function getFollowingFeed(page = 0, size = 20): Promise<PublicComposition[]> {
   return apiFetch<PublicComposition[]>(`/api/feed/following?page=${page}&size=${size}`);
 }
+
+// --- Notifications (auth) ------------------------------------------
+
+export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW";
+
+export interface Notification {
+  id: number;
+  type: NotificationType;
+  actor: string;
+  compositionId: number | null;
+  compositionTitle: string | null;
+  compositionSlug: string | null;
+  commentId: number | null;
+  read: boolean;
+  createdAt: string;
+}
+
+/** The current user's most recent notifications, newest first. */
+export function listNotifications(limit = 20): Promise<Notification[]> {
+  return apiFetch<Notification[]>(`/api/notifications?limit=${limit}`);
+}
+
+export function getUnreadNotificationCount(): Promise<number> {
+  return apiFetch<number>("/api/notifications/unread-count");
+}
+
+export function markNotificationRead(id: number): Promise<void> {
+  return apiFetch<void>(`/api/notifications/${id}/read`, { method: "POST" });
+}

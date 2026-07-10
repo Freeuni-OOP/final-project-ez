@@ -16,9 +16,13 @@ public record CompositionResponse(
         String slug,
         Instant createdAt,
         Instant updatedAt,
-        List<String> tags) {
+        List<String> tags,
+        Long remixedFromId,
+        String remixedFromTitle,
+        String remixedFromAuthor) {
 
     public static CompositionResponse from(Composition c) {
+        var source = c.getRemixedFrom();
         return new CompositionResponse(
                 c.getId(),
                 c.getTitle(),
@@ -28,6 +32,9 @@ public record CompositionResponse(
                 c.getSlug(),
                 c.getCreatedAt(),
                 c.getUpdatedAt(),
-                c.getTags().stream().map(Tag::getName).sorted(Comparator.naturalOrder()).toList());
+                c.getTags().stream().map(Tag::getName).sorted(Comparator.naturalOrder()).toList(),
+                source == null ? null : source.getId(),
+                source == null ? null : source.getTitle(),
+                source == null ? null : source.getOwner().getUsername());
     }
 }

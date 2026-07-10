@@ -64,6 +64,11 @@ public class Composition {
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new LinkedHashSet<>();
 
+    /** The public composition this one was remixed from, if any (see V10 migration). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "remixed_from_id")
+    private Composition remixedFrom;
+
     protected Composition() {
         // required by JPA
     }
@@ -152,5 +157,13 @@ public class Composition {
     /** Copies into a mutable set - Hibernate manages/clears this collection internally. */
     public void setTags(Set<Tag> tags) {
         this.tags = new LinkedHashSet<>(tags);
+    }
+
+    public Composition getRemixedFrom() {
+        return remixedFrom;
+    }
+
+    public void setRemixedFrom(Composition remixedFrom) {
+        this.remixedFrom = remixedFrom;
     }
 }

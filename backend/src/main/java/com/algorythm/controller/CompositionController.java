@@ -72,4 +72,16 @@ public class CompositionController {
     public CompositionResponse unpublish(Authentication authentication, @PathVariable Long id) {
         return compositionService.unpublish(authentication.getName(), id);
     }
+
+    /**
+     * Copy a public composition (by its share slug) into the current user's
+     * library as a new private, unpublished composition. Lives here rather
+     * than under /api/public/** so it requires a JWT like the rest of this
+     * controller.
+     */
+    @PostMapping("/remix/{slug}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CompositionResponse remix(Authentication authentication, @PathVariable String slug) {
+        return compositionService.remix(authentication.getName(), slug);
+    }
 }
