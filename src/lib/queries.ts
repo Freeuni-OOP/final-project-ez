@@ -27,6 +27,9 @@ import {
   unfollowUser,
   unpublishComposition,
   updateComposition,
+  changePassword,
+  changeEmail,
+  deleteAccount,
 } from "@/lib/api";
 
 // --- Health ------------------------------------------------------------
@@ -191,5 +194,32 @@ export function useMarkNotificationRead() {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["notificationsUnreadCount"] });
     },
+  });
+}
+
+// --- Account (auth) --------------------------------------------------------
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: ({
+      currentPassword,
+      newPassword,
+    }: {
+      currentPassword: string;
+      newPassword: string;
+    }) => changePassword(currentPassword, newPassword),
+  });
+}
+
+export function useChangeEmail() {
+  return useMutation({
+    mutationFn: ({ currentPassword, email }: { currentPassword: string; email: string }) =>
+      changeEmail(currentPassword, email),
+  });
+}
+
+export function useDeleteAccount() {
+  return useMutation({
+    mutationFn: (currentPassword: string) => deleteAccount(currentPassword),
   });
 }

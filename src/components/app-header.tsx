@@ -58,7 +58,12 @@ export function AppHeader() {
           {user ? (
             <>
               <NotificationsMenu username={user.username} />
-              <span className="text-sm font-medium text-foreground">{user.username}</span>
+              <Link
+                to="/settings"
+                className="text-sm font-medium text-foreground transition-colors hover:text-primary"
+              >
+                {user.username}
+              </Link>
               <button
                 onClick={logout}
                 className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground"

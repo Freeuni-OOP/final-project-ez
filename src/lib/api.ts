@@ -252,3 +252,26 @@ export function markNotificationRead(id: number): Promise<void> {
     method: "POST",
   });
 }
+
+// --- Account (auth) -----------------------------------------------
+
+export function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  return apiFetch<void>("/api/account/password", {
+    method: "PUT",
+    body: { currentPassword, newPassword },
+  });
+}
+
+export function changeEmail(currentPassword: string, email: string): Promise<AuthUser> {
+  return apiFetch<AuthUser>("/api/account/email", {
+    method: "PUT",
+    body: { currentPassword, email },
+  });
+}
+
+export function deleteAccount(currentPassword: string): Promise<void> {
+  return apiFetch<void>("/api/account", {
+    method: "DELETE",
+    body: { currentPassword },
+  });
+}
