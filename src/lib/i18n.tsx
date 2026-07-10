@@ -59,6 +59,7 @@ const strings = {
   explore_sub: "Public compositions from the community.",
   empty_explore: "No public compositions yet — publish one to get started.",
   not_found: "This isn't available.",
+  loading: "Loading…",
   joined: "Joined",
   published_works: "Published compositions",
   no_published: "No published compositions yet.",

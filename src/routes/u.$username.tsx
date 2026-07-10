@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
 import { useToggleFollow, useUserProfile } from "@/lib/queries";
+import { ErrorState, LoadingState } from "@/components/states";
 
 export const Route = createFileRoute("/u/$username")({
   component: Profile,
@@ -21,9 +22,9 @@ function Profile() {
     <main className="min-h-screen bg-background text-foreground">
       <section className="mx-auto max-w-6xl px-6 py-12">
         {isError ? (
-          <p className="text-sm text-muted-foreground">{t("not_found")}</p>
+          <ErrorState message={t("not_found")} />
         ) : !profile ? (
-          <p className="text-sm text-muted-foreground">…</p>
+          <LoadingState message={t("loading")} />
         ) : (
           <>
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{profile.username}</h1>
