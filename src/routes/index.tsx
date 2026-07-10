@@ -9,6 +9,20 @@ import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const rawEditId = search.editId;
+    const parsedEditId =
+      typeof rawEditId === "number"
+        ? rawEditId
+        : typeof rawEditId === "string"
+          ? Number(rawEditId)
+          : undefined;
+
+    return {
+      editId:
+        parsedEditId !== undefined && Number.isFinite(parsedEditId) ? parsedEditId : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "AlgoRythm — Hear your code" },
@@ -21,7 +35,6 @@ export const Route = createFileRoute("/")({
   }),
   component: Composer,
 });
-
 // Ready-made patterns the user can load with one click. Each carries its own
 // tempo so loading it also sets the BPM. They span styles + the full instrument
 // set so a new user immediately hears what the app can do.
@@ -224,6 +237,7 @@ function Hero() {
 }
 
 function Composer() {
+  const { editId } = Route.useSearch();
   const { t } = useI18n();
 
   const [source, setSource] = useState(EXAMPLES[0].pattern);
@@ -424,7 +438,7 @@ function Composer() {
           </div>
 
           {/* Save / load (signed-in users) */}
-          <CompositionBar source={source} bpm={bpm} onLoad={loadComposition} />
+          <CompositionBar source={source} bpm={bpm} onLoad={loadComposition} editId={editId} />
         </div>
 
         {/* Visualizer + grid + mixer */}

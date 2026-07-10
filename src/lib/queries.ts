@@ -21,6 +21,7 @@ import {
   listNotifications,
   listPublicCompositions,
   markNotificationRead,
+  remixComposition,
   searchPublicCompositions,
   publishComposition,
   unfollowUser,
@@ -91,6 +92,14 @@ export function useCreateComposition() {
   const invalidate = useInvalidateMyCompositions();
   return useMutation({
     mutationFn: (body: CompositionInput) => createComposition(body),
+    onSuccess: invalidate,
+  });
+}
+export function useRemixComposition() {
+  const invalidate = useInvalidateMyCompositions();
+
+  return useMutation({
+    mutationFn: (slug: string) => remixComposition(slug),
     onSuccess: invalidate,
   });
 }

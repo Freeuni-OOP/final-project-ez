@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { type Composition } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -15,11 +16,14 @@ export function CompositionBar({
   source,
   bpm,
   onLoad,
+  editId,
 }: {
   source: string;
   bpm: number;
   onLoad: (pattern: string, bpm: number) => void;
+  editId?: number;
 }) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useI18n();
 
@@ -34,7 +38,25 @@ export function CompositionBar({
   const [editing, setEditing] = useState<Composition | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  useEffect(() => {
+    if (!user || !editId || items.length === 0) return;
 
+    const composition = items.find((item) => item.id === editId);
+    if (!composition || editing?.id === composition.id) return;
+
+    setError(null);
+    setEditing(composition);
+    setTitle(composition.title);
+    setTagsText(composition.tags.join(", "));
+    onLoad(composition.pattern, composition.bpm);
+
+    void navigate({
+      to: "/",
+      search: {},
+      hash: "composer",
+      replace: true,
+    });
+  }, [editId, editing?.id, items, navigate, onLoad, user]);
   if (!user) {
     return (
       <div className="rounded-xl border border-border bg-foreground/5 p-4 text-sm text-muted-foreground">
