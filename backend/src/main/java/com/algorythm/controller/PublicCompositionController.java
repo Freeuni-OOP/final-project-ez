@@ -1,9 +1,9 @@
 package com.algorythm.controller;
 
 import com.algorythm.dto.PublicCompositionResponse;
+import com.algorythm.security.ViewerResolver;
 import com.algorythm.service.PublicCompositionService;
 import java.util.List;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,9 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class PublicCompositionController {
 
     private final PublicCompositionService publicCompositionService;
+    private final ViewerResolver viewerResolver;
 
-    public PublicCompositionController(PublicCompositionService publicCompositionService) {
+    public PublicCompositionController(
+            PublicCompositionService publicCompositionService, ViewerResolver viewerResolver) {
         this.publicCompositionService = publicCompositionService;
+        this.viewerResolver = viewerResolver;
     }
 
     @GetMapping
@@ -34,7 +37,7 @@ public class PublicCompositionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String tag) {
-        return publicCompositionService.feed(page, size, tag, viewer(authentication));
+        return publicCompositionService.feed(page, size, tag, viewerResolver.username(authentication));
     }
 
     @GetMapping("/search")
@@ -43,21 +46,11 @@ public class PublicCompositionController {
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return publicCompositionService.search(q, page, size, viewer(authentication));
+        return publicCompositionService.search(q, page, size, viewerResolver.username(authentication));
     }
 
     @GetMapping("/{slug}")
     public PublicCompositionResponse get(Authentication authentication, @PathVariable String slug) {
-        return publicCompositionService.getBySlug(slug, viewer(authentication));
-    }
-
-    /** Logged-in username, or null when the request is anonymous. */
-    private static String viewer(Authentication authentication) {
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || authentication instanceof AnonymousAuthenticationToken) {
-            return null;
-        }
-        return authentication.getName();
+        return publicCompositionService.getBySlug(slug, viewerResolver.username(authentication));
     }
 }

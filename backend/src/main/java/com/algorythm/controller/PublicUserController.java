@@ -1,8 +1,8 @@
 package com.algorythm.controller;
 
 import com.algorythm.dto.UserProfileResponse;
+import com.algorythm.security.ViewerResolver;
 import com.algorythm.service.UserProfileService;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,23 +19,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class PublicUserController {
 
     private final UserProfileService userProfileService;
+    private final ViewerResolver viewerResolver;
 
-    public PublicUserController(UserProfileService userProfileService) {
+    public PublicUserController(
+            UserProfileService userProfileService, ViewerResolver viewerResolver) {
         this.userProfileService = userProfileService;
+        this.viewerResolver = viewerResolver;
     }
 
     @GetMapping("/{username}")
     public UserProfileResponse get(Authentication authentication, @PathVariable String username) {
-        return userProfileService.getProfile(username, viewer(authentication));
-    }
-
-    /** Logged-in username, or null when the request is anonymous. */
-    private static String viewer(Authentication authentication) {
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || authentication instanceof AnonymousAuthenticationToken) {
-            return null;
-        }
-        return authentication.getName();
+        return userProfileService.getProfile(username, viewerResolver.username(authentication));
     }
 }

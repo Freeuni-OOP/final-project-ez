@@ -8,6 +8,7 @@ import com.algorythm.model.User;
 import com.algorythm.repository.CompositionLikeRepository;
 import com.algorythm.repository.CompositionRepository;
 import com.algorythm.repository.UserRepository;
+import com.algorythm.security.ViewerResolver;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,15 +30,18 @@ public class LikeService {
     private final CompositionRepository compositions;
     private final UserRepository users;
     private final NotificationService notifications;
+    private final ViewerResolver viewerResolver;
 
     public LikeService(CompositionLikeRepository likes,
                        CompositionRepository compositions,
                        UserRepository users,
-                       NotificationService notifications) {
+                       NotificationService notifications,
+                       ViewerResolver viewerResolver) {
         this.likes = likes;
         this.compositions = compositions;
         this.users = users;
         this.notifications = notifications;
+        this.viewerResolver = viewerResolver;
     }
 
     /** Like a public composition. Liking again is a no-op. */
@@ -68,7 +72,7 @@ public class LikeService {
     /** Build a response for one composition, filling in likeCount and likedByMe. */
     @Transactional(readOnly = true)
     public PublicCompositionResponse toResponse(Composition composition, String viewerUsername) {
-        Long viewerId = viewerId(viewerUsername);
+        Long viewerId = viewerResolver.resolveId(viewerUsername);
         long count = likes.countByIdCompositionId(composition.getId());
         boolean likedByMe = viewerId != null
                 && likes.existsByIdUserIdAndIdCompositionId(viewerId, composition.getId());
@@ -78,7 +82,7 @@ public class LikeService {
     /** Build responses for a list of compositions using batched like lookups. */
     @Transactional(readOnly = true)
     public List<PublicCompositionResponse> toResponses(List<Composition> list, String viewerUsername) {
-        Long viewerId = viewerId(viewerUsername);
+        Long viewerId = viewerResolver.resolveId(viewerUsername);
         List<Long> ids = list.stream().map(Composition::getId).toList();
         Map<Long, Long> counts = countsByComposition(ids);
         Set<Long> liked = likedIds(viewerId, ids);
@@ -108,12 +112,6 @@ public class LikeService {
         return new HashSet<>(likes.likedCompositionIds(viewerId, ids));
     }
 
-    private Long viewerId(String username) {
-        if (username == null) {
-            return null;
-        }
-        return users.findByUsername(username).map(User::getId).orElse(null);
-    }
 
     private User requireUser(String username) {
         return users.findByUsername(username).orElseThrow(

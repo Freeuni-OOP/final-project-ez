@@ -15,6 +15,7 @@ import com.algorythm.model.User;
 import com.algorythm.repository.CompositionLikeRepository;
 import com.algorythm.repository.CompositionRepository;
 import com.algorythm.repository.UserRepository;
+import com.algorythm.security.ViewerResolver;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ class LikeServiceTest {
     @Mock private CompositionLikeRepository likes;
     @Mock private CompositionRepository compositions;
     @Mock private UserRepository users;
+    @Mock private ViewerResolver viewerResolver;
 
     private LikeService likeService;
 
@@ -44,7 +46,7 @@ class LikeServiceTest {
 
     @BeforeEach
     void setUp() {
-        likeService = new LikeService(likes, compositions, users, notifications);
+        likeService = new LikeService(likes, compositions, users, notifications, viewerResolver);
     }
 
     // --- like ------------------------------------------------------------
@@ -147,7 +149,7 @@ class LikeServiceTest {
     void toResponse_reflectsTheCountAndWhetherTheViewerLikedIt() {
         Composition composition = publicComposition();
         User bob = withId(new User("bob", "b@x.com", "pw"), 42L);
-        when(users.findByUsername("bob")).thenReturn(Optional.of(bob));
+        when(viewerResolver.resolveId("bob")).thenReturn(bob.getId());
         when(likes.countByIdCompositionId(any())).thenReturn(3L);
         when(likes.existsByIdUserIdAndIdCompositionId(eq(42L), any())).thenReturn(true);
 

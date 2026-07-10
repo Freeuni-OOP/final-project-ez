@@ -15,6 +15,7 @@ import com.algorythm.model.Composition;
 import com.algorythm.model.User;
 import com.algorythm.repository.CompositionRepository;
 import com.algorythm.repository.UserRepository;
+import com.algorythm.security.ViewerResolver;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ class UserProfileServiceTest {
     @Mock private CompositionRepository compositions;
     @Mock private LikeService likeService;
     @Mock private FollowService followService;
+    @Mock private ViewerResolver viewerResolver;
 
 
     private UserProfileService userProfileService;
@@ -49,7 +51,7 @@ class UserProfileServiceTest {
 
     @BeforeEach
     void setUp() {
-        userProfileService = new UserProfileService(users, compositions, likeService, followService);
+        userProfileService = new UserProfileService(users, compositions, likeService, followService, viewerResolver);
     }
 
 
@@ -97,9 +99,8 @@ class UserProfileServiceTest {
 
     @Test
     void getProfile_looksUpTheViewerWhenAViewerUsernameIsGiven() {
-        User bob = new User("bob", "bob@example.com", "hashed-pw");
         when(users.findByUsername("alice")).thenReturn(Optional.of(alice));
-        when(users.findByUsername("bob")).thenReturn(Optional.of(bob));
+        when(viewerResolver.resolveId("bob")).thenReturn(99L);
         when(compositions.findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(alice))
                 .thenReturn(List.of());
         when(likeService.toResponses(List.of(), "bob")).thenReturn(List.of());
@@ -111,7 +112,7 @@ class UserProfileServiceTest {
         // real numeric-id correctness of isFollowing is proven end-to-end by
         // PublicUserControllerIntegrationTest; here we only prove the viewer
         // gets looked up instead of the anonymous (null) path being taken.
-        verify(users).findByUsername("bob");
+        verify(viewerResolver).resolveId("bob");
         verify(followService).isFollowing(any(), any());
     }
 
@@ -119,7 +120,6 @@ class UserProfileServiceTest {
     @Test
     void getProfile_treatsAnUnresolvableViewerUsernameAsAnonymous() {
         when(users.findByUsername("alice")).thenReturn(Optional.of(alice));
-        when(users.findByUsername("ghost-viewer")).thenReturn(Optional.empty());
         when(compositions.findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(alice))
                 .thenReturn(List.of());
         when(likeService.toResponses(List.of(), "ghost-viewer")).thenReturn(List.of());
