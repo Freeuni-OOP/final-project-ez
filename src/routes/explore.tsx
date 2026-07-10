@@ -4,8 +4,9 @@ import { useState } from "react";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { LikeButton } from "@/components/like-button";
 import { useI18n } from "@/lib/i18n";
-import { useInfinitePublicCompositions } from "@/lib/queries";
+import { useInfinitePublicCompositions, useSearchUsers } from "@/lib/queries";
 import { EmptyState, LoadingState } from "@/components/states";
+import { UserList } from "@/components/user-list";
 
 export const Route = createFileRoute("/explore")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -27,6 +28,9 @@ function Explore() {
   const { data, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useInfinitePublicCompositions(selectedTag, query);
   const items = data?.pages.flat() ?? [];
+
+  const searching = query.trim().length > 0;
+  const userResults = useSearchUsers(query);
 
   function applySearch() {
     void navigate({
@@ -91,6 +95,21 @@ function Explore() {
             {t("explore_filtering_by")}{" "}
             <span className="font-medium text-foreground">#{selectedTag}</span>
           </p>
+        )}
+
+        {searching && (
+          <section className="mt-8">
+            <h2 className="mb-2 text-lg font-semibold">{t("explore_people")}</h2>
+            {userResults.isPending ? (
+              <LoadingState message={t("loading")} />
+            ) : (
+              <UserList users={userResults.data ?? []} emptyMessage={t("explore_people_none")} />
+            )}
+          </section>
+        )}
+
+        {searching && (
+          <h2 className="mt-8 mb-2 text-lg font-semibold">{t("explore_compositions")}</h2>
         )}
 
         {isPending ? (

@@ -214,6 +214,28 @@ export function getUserProfile(username: string): Promise<UserProfile> {
   return apiFetch<UserProfile>(`/api/public/users/${username}`);
 }
 
+/** A compact user for search results and follower/following lists. */
+export interface UserSummary {
+  username: string;
+  joinedAt: string;
+  isFollowing: boolean;
+}
+
+/** Search users by username. Returns an empty list for a blank query. */
+export function searchUsers(query: string): Promise<UserSummary[]> {
+  return apiFetch<UserSummary[]>(`/api/public/users?q=${encodeURIComponent(query)}`);
+}
+
+/** The users who follow `username`, most recent first. */
+export function getUserFollowers(username: string): Promise<UserSummary[]> {
+  return apiFetch<UserSummary[]>(`/api/public/users/${username}/followers`);
+}
+
+/** The users `username` follows, most recent first. */
+export function getUserFollowing(username: string): Promise<UserSummary[]> {
+  return apiFetch<UserSummary[]>(`/api/public/users/${username}/following`);
+}
+
 // --- Follows + feed (auth) ----------------------------------------
 
 /** Follow a user. No-op on the server if already following. */

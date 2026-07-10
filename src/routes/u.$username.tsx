@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { useAuth } from "@/lib/auth";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
-import { useToggleFollow, useUserProfile } from "@/lib/queries";
+import { useToggleFollow, useUserFollowers, useUserFollowing, useUserProfile } from "@/lib/queries";
 import { ErrorState, LoadingState } from "@/components/states";
+import { UserListDialog } from "@/components/user-list-dialog";
 
 export const Route = createFileRoute("/u/$username")({
   component: Profile,
@@ -17,6 +19,10 @@ function Profile() {
 
   const { data: profile, isError } = useUserProfile(username);
   const toggleFollow = useToggleFollow(username);
+
+  const [openList, setOpenList] = useState<"followers" | "following" | null>(null);
+  const followers = useUserFollowers(username, openList === "followers");
+  const following = useUserFollowing(username, openList === "following");
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -34,10 +40,23 @@ function Profile() {
 
             <div className="mt-3 flex flex-wrap items-center gap-4">
               <p className="text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">{profile.followerCount}</span>{" "}
-                {t("followers")} ·{" "}
-                <span className="font-semibold text-foreground">{profile.followingCount}</span>{" "}
-                {t("following")}
+                <button
+                  type="button"
+                  onClick={() => setOpenList("followers")}
+                  className="rounded-sm transition-colors hover:text-foreground"
+                >
+                  <span className="font-semibold text-foreground">{profile.followerCount}</span>{" "}
+                  {t("followers")}
+                </button>{" "}
+                ·{" "}
+                <button
+                  type="button"
+                  onClick={() => setOpenList("following")}
+                  className="rounded-sm transition-colors hover:text-foreground"
+                >
+                  <span className="font-semibold text-foreground">{profile.followingCount}</span>{" "}
+                  {t("following")}
+                </button>
               </p>
               {user && user.username !== profile.username && (
                 <button
@@ -100,6 +119,25 @@ function Profile() {
           </Link>
         </div>
       </section>
+
+      {openList === "followers" && (
+        <UserListDialog
+          title={t("followers")}
+          users={followers.data}
+          isLoading={followers.isPending}
+          emptyMessage={t("no_followers")}
+          onClose={() => setOpenList(null)}
+        />
+      )}
+      {openList === "following" && (
+        <UserListDialog
+          title={t("following")}
+          users={following.data}
+          isLoading={following.isPending}
+          emptyMessage={t("no_following")}
+          onClose={() => setOpenList(null)}
+        />
+      )}
     </main>
   );
 }

@@ -61,12 +61,15 @@ const strings = {
   not_found: "This isn't available.",
 
   // Explore search/filter
-  explore_search_placeholder: "Search compositions…",
+  explore_search_placeholder: "Search compositions & people…",
   explore_search: "Search",
   explore_clear: "Clear",
   explore_filtering_by: "Filtering by tag:",
   explore_loading: "Loading compositions…",
   explore_none: "No compositions found.",
+  explore_people: "People",
+  explore_people_none: "No people found.",
+  explore_compositions: "Compositions",
 
   // Wired-up UIs
   like: "Like",
@@ -118,6 +121,8 @@ const strings = {
   unfollow: "Unfollow",
   followers: "Followers",
   following: "Following",
+  no_followers: "No followers yet.",
+  no_following: "Not following anyone yet.",
   feed_title: "Following",
   feed_sub: "New public work from people you follow.",
   empty_feed: "Nothing here yet — follow someone to see their work.",
