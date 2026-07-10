@@ -164,6 +164,8 @@ class LikeServiceTest {
         Composition composition = publicComposition();
         when(likes.countByIdCompositionId(any())).thenReturn(3L);
 
+        when(viewerResolver.resolveId(null)).thenReturn(null);
+
         PublicCompositionResponse response = likeService.toResponse(composition, null);
 
         assertThat(response.likedByMe()).isFalse();

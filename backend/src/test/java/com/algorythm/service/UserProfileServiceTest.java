@@ -70,6 +70,8 @@ class UserProfileServiceTest {
         when(followService.isFollowing(null, alice.getId())).thenReturn(false);
 
 
+        when(viewerResolver.resolveId(null)).thenReturn(null);
+
         UserProfileResponse profile = userProfileService.getProfile("alice", null);
 
 
@@ -123,6 +125,7 @@ class UserProfileServiceTest {
         when(compositions.findByOwnerAndIsPublicTrueOrderByUpdatedAtDesc(alice))
                 .thenReturn(List.of());
         when(likeService.toResponses(List.of(), "ghost-viewer")).thenReturn(List.of());
+        when(viewerResolver.resolveId("ghost-viewer")).thenReturn(null);
 
 
         userProfileService.getProfile("alice", "ghost-viewer");
