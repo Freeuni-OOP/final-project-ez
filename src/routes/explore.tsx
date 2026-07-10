@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { useI18n } from "@/lib/i18n";
-import { usePublicCompositions } from "@/lib/queries";
+import { useInfinitePublicCompositions } from "@/lib/queries";
 
 export const Route = createFileRoute("/explore")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -22,8 +22,9 @@ function Explore() {
   const selectedTag = searchParams.tag;
   const query = searchParams.q ?? "";
 
-  const { data, isPending } = usePublicCompositions(0, 20, selectedTag, query);
-  const items = data ?? [];
+  const { data, isPending, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useInfinitePublicCompositions(selectedTag, query);
+  const items = data?.pages.flat() ?? [];
 
   function applySearch() {
     void navigate({
@@ -126,6 +127,19 @@ function Explore() {
                 </SpotlightCard>
               </Link>
             ))}
+          </div>
+        )}
+
+        {hasNextPage && (
+          <div className="mt-8 flex justify-center">
+            <button
+              type="button"
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="rounded-md border border-border px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-60"
+            >
+              {isFetchingNextPage ? t("loading_more") : t("load_more")}
+            </button>
           </div>
         )}
       </section>
