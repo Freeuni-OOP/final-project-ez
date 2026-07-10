@@ -23,10 +23,7 @@ function UserRow({ person, onNavigate }: { person: UserSummary; onNavigate?: () 
   const onToggle = () => {
     const next = !following;
     setFollowing(next);
-    toggle.mutate(
-      { username: person.username, next },
-      { onError: () => setFollowing(!next) },
-    );
+    toggle.mutate({ username: person.username, next }, { onError: () => setFollowing(!next) });
   };
 
   return (
